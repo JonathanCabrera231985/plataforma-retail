@@ -1,5 +1,5 @@
 // apps/inventory-service/src/main.ts
-
+import 'reflect-metadata'; // <-- ADD THIS LINE
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';

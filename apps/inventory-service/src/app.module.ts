@@ -6,20 +6,21 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
+// No need to import Category entity here anymore if using auto-detect
 
 @Module({
   imports: [
-    // 1. Configuración de variables de entorno (GLOBAL)
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // 2. Configuración de la conexión a la base de datos
-    // Esta es la única copia, dentro de 'imports' y sin 'async'
+    // Restore forRootAsync, but add ConfigModule to its imports
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule], // <--- Add this line back
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({ // Keep async removed for now
         type: 'postgres',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
@@ -27,11 +28,13 @@ import { CategoriesModule } from './categories/categories.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: true, // Dev only
       }),
     }),
 
     CategoriesModule,
+
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
