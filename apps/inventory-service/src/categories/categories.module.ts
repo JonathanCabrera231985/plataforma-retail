@@ -12,3 +12,4 @@ import { Category } from './entities/category.entity'; // 2. Importar
   providers: [CategoriesService],
 })
 export class CategoriesModule {}
+exports: [CategoriesService]
