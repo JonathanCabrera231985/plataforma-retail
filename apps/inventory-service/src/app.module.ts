@@ -9,15 +9,15 @@ import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
-    // 1. Carga el módulo de Configuración (.env)
+    // 1. Configuración de variables de entorno (GLOBAL)
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // 2. Configura la conexión a la base de datos
+    // 2. Configuración de la conexión a la base de datos
+    // Esta es la única copia, dentro de 'imports' y sin 'async'
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
@@ -27,7 +27,7 @@ import { CategoriesModule } from './categories/categories.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Solo para desarrollo
+        synchronize: true,
       }),
     }),
 
