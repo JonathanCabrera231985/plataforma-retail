@@ -18,18 +18,15 @@ export class AuthService {
    * Valida un usuario por email y contraseña.
    * (Este método es privado, solo lo usará el servicio)
    */
-  private async validateUser(email: string, pass: string): Promise<any> {
-    // Usamos el servicio de usuarios para encontrar el usuario por email
-    // Necesitamos acceso a la entidad completa (con el hash)
-    const user = await this.usersService.findOneByEmailForAuth(email);
+private async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findOneByEmailForAuth(email); // This still needs findOneByEmailForAuth to exist in UsersService
 
     if (user && (await bcrypt.compare(pass, user.password_hash))) {
-      // Si el usuario existe y las contraseñas coinciden,
-      // retornamos el usuario sin el hash
-      delete user.password_hash;
-      return user;
+      // Create a new object without the password hash
+      const { password_hash, ...result } = user;
+      return result; // Return the new object
     }
-    return null; // Si no, retornamos null
+    return null;
   }
 
   /**

@@ -1,6 +1,6 @@
 // apps/iam-service/src/auth/strategies/jwt.strategy.ts
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -19,13 +19,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly usersService: UsersService, // Inyectamos UsersService
   ) {
+   const secret = configService.get<string>('JWT_SECRET'); // Get the secret first
+    if (!secret) {
+      // Throw an error during startup if secret is missing
+      throw new InternalServerErrorException('JWT_SECRET no está definido en las variables de entorno');
+    }
+
     super({
-      // 1. Dónde buscar el token (en el encabezado Bearer)
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      // 2. No ignorar si el token expiró
       ignoreExpiration: false,
-      // 3. El mismo secreto que usamos para firmar el token
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      secretOrKey: secret, // Use the validated secret variable
     });
   }
 

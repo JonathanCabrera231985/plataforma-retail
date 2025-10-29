@@ -34,3 +34,4 @@ export class AuthController {
     return req.user;
   // ... (Añade el siguiente método) ...
 }
+}

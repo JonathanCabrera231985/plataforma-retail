@@ -1,12 +1,12 @@
 // apps/inventory-service/src/products/products.service.ts
 
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'; // Asegúrate que NotFoundException esté importado
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
-import { CategoriesService } from '../categories/categories.service'; // Importa CategoriesService
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class ProductsService {
@@ -43,27 +43,34 @@ export class ProductsService {
     }
   }
 
-  findAll() {
-    // Devuelve productos con sus categorías (por el 'eager: true' en la entidad)
+  // --- IMPLEMENTACIÓN DE FINDALL ---
+  async findAll(): Promise<Product[]> {
+    // Gracias a 'eager: true' en la entidad Product,
+    // esto cargará automáticamente la información de la categoría.
     return this.productRepository.find();
-    // Podrías añadir { relations: ['category'] } si no usaras 'eager'
+    // Si no usaras 'eager', podrías especificarlo aquí:
+    // return this.productRepository.find({ relations: ['category'] });
   }
 
-  async findOne(id: string) {
+  // --- IMPLEMENTACIÓN DE FINDONE ---
+  async findOne(id: string): Promise<Product> {
+    // También carga la categoría por 'eager: true'
     const product = await this.productRepository.findOne({ where: { id } });
+
+    // Verifica si el producto existe
     if (!product) {
       throw new NotFoundException(`Producto con ID "${id}" no encontrado`);
     }
     return product;
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    // Implementar lógica de actualización (incluyendo buscar categoría si cambia)
+  uupdate(id: string, updateProductDto: UpdateProductDto) {
+    // TODO: Implementar lógica de actualización
     return `This action updates a #${id} product`;
   }
 
   remove(id: string) {
-    // Implementar lógica de borrado
+    // TODO: Implementar lógica de borrado
     return `This action removes a #${id} product`;
   }
 }

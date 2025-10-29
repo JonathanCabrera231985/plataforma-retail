@@ -15,5 +15,6 @@ async function bootstrap() {
   }));
 
   await app.listen(3000);
+  console.log(`InventoryService está corriendo en el puerto 3000`);
 }
 bootstrap();
