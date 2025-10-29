@@ -7,6 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { InventoryModule } from './inventory/inventory.module';
 // No need to import Category entity here anymore if using auto-detect
 
 @Module({
@@ -35,6 +36,8 @@ import { ProductsModule } from './products/products.module';
     CategoriesModule,
 
     ProductsModule,
+
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
