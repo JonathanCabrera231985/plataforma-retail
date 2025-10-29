@@ -64,13 +64,52 @@ export class ProductsService {
     return product;
   }
 
-  uupdate(id: string, updateProductDto: UpdateProductDto) {
-    // TODO: Implementar lógica de actualización
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+    // 1. Carga el producto existente junto con su categoría actual
+    //    Usamos 'preload' que busca el producto por ID y luego fusiona los nuevos datos.
+    //    Si el producto no existe, retorna undefined.
+    const product = await this.productRepository.preload({
+      id: id,
+      ...updateProductDto, // Fusiona los datos del DTO
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Producto con ID "${id}" no encontrado`);
+    }
+
+    // 2. (Opcional) Si se proporciona un categoryId en el DTO, busca y asigna la nueva categoría
+    if (updateProductDto.categoryId) {
+      const category = await this.categoriesService.findOne(updateProductDto.categoryId);
+      if (!category) {
+        throw new NotFoundException(`Categoría con ID "${updateProductDto.categoryId}" no encontrada al actualizar`);
+      }
+      product.category = category;
+    }
+
+    try {
+      // 3. Guarda los cambios en la base de datos
+      return await this.productRepository.save(product);
+    } catch (error) {
+      // TODO: Manejar errores específicos (ej. SKU duplicado si existe)
+      console.error(error);
+      throw new InternalServerErrorException('Error al actualizar el producto');
+    }
   }
 
-  remove(id: string) {
-    // TODO: Implementar lógica de borrado
-    return `This action removes a #${id} product`;
+  async remove(id: string): Promise<void> { // Cambiamos el retorno a Promise<void>
+    // 1. Primero busca el producto para asegurarte de que existe
+    const product = await this.findOne(id); // Reutiliza findOne que ya lanza NotFoundException
+
+    // 2. Elimina el producto
+    // Usamos 'remove' que opera sobre la entidad encontrada
+    // await this.productRepository.remove(product);
+    // O puedes usar 'delete' que opera directamente por ID
+    const deleteResult = await this.productRepository.delete(id);
+
+    if (deleteResult.affected === 0) {
+        // Esto no debería ocurrir si findOne tuvo éxito, pero es una buena práctica
+        throw new NotFoundException(`Producto con ID "${id}" no encontrado al intentar eliminar`);
+    }
+    // No retornamos nada en un DELETE exitoso (o puedes retornar { affected: deleteResult.affected })
   }
 }
