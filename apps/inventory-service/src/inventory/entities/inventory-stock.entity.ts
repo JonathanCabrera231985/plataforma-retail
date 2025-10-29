@@ -1,7 +1,7 @@
 // apps/inventory-service/src/inventory/entities/inventory-stock.entity.ts
 
 import { Product } from '../../products/entities/product.entity';
-// import { Location } from '../../locations/entities/location.entity'; // Descomentaremos esto más tarde
+import { Location } from '../../locations/entities/location.entity'; // 1. Importar Location
 import {
   Column,
   CreateDateColumn,
@@ -10,11 +10,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  Unique, // Para asegurar que solo haya una entrada por producto/ubicación
+  Unique,
 } from 'typeorm';
 
 @Entity('inventory_stock')
-@Unique(['product', 'location']) // Clave única compuesta
+@Unique(['product', 'location'])
 export class InventoryStock {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,21 +22,20 @@ export class InventoryStock {
   @Column({ type: 'int', default: 0 })
   quantity: number;
 
-  // --- Relación con Product ---
-  @ManyToOne(() => Product, { nullable: false, eager: true }) // eager opcional
+  @ManyToOne(() => Product, { nullable: false, eager: true })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  // --- Relación con Location (La crearemos después) ---
-  /*
-  @ManyToOne(() => Location, { nullable: false, eager: true }) // eager opcional
+  // --- Relación con Location (Actualizada) ---
+  @ManyToOne(() => Location, { nullable: false, eager: true }) // 2. Descomentar y asegurar que eager sea true (o quitarlo si prefieres carga manual)
   @JoinColumn({ name: 'location_id' })
-  location: Location;
-  */
-  @Column({ type: 'uuid', name: 'location_id' }) // Temporalmente usamos solo el ID
-  locationId: string; // Cambiaremos esto por la relación completa
+  location: Location; // 3. Usar la entidad Location
+  // ------------------------------------------
 
-  // --- Columnas de auditoría ---
+  // 4. Eliminar la columna temporal locationId
+  // @Column({ type: 'uuid', name: 'location_id' })
+  // locationId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
