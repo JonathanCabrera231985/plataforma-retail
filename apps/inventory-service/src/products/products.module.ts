@@ -13,3 +13,4 @@ import { CategoriesModule } from '../categories/categories.module'; // Importar 
   providers: [ProductsService],
 })
 export class ProductsModule {}
+exports: [ProductsService]
