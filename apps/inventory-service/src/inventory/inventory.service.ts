@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { ProductsService } from '../products/products.service'; // Importar ProductsService
 import { LocationsService } from '../locations/locations.service'; // Importar LocationsService
 
+
+
 @Injectable()
 export class InventoryService {
   constructor(
@@ -101,4 +103,74 @@ export class InventoryService {
       throw new NotFoundException(`Registro de inventario con ID "${id}" no encontrado`);
     }
   }
+
+  /**
+   * Incrementa el stock de un producto en una ubicación.
+   * @param productId ID del producto
+   * @param locationId ID de la ubicación
+   * @param amount Cantidad a añadir (debe ser positiva)
+   * @returns El registro de stock actualizado
+   */
+async incrementStock(productId: string, locationId: string, amount: number): Promise<InventoryStock> {
+    if (amount <= 0) {
+      throw new Error('La cantidad a incrementar debe ser positiva.');
+    }
+
+    // Busca el registro existente o crea uno nuevo si no existe con cantidad 0
+    let stockItem = await this.inventoryRepository.findOne({
+      where: {
+        product: { id: productId },
+        location: { id: locationId },
+      },
+    });
+
+    if (!stockItem) {
+      // Valida que producto y ubicación existan antes de crear
+      const product = await this.productsService.findOne(productId);
+      const location = await this.locationsService.findOne(locationId);
+      stockItem = this.inventoryRepository.create({
+        product: product,
+        location: location,
+        quantity: 0,
+      });
+    }
+
+    stockItem.quantity += amount; // Incrementa la cantidad
+    return this.inventoryRepository.save(stockItem);
+  }
+
+  /**
+   * Decrementa el stock de un producto en una ubicación.
+   * @param productId ID del producto
+   * @param locationId ID de la ubicación
+   * @param amount Cantidad a restar (debe ser positiva)
+   * @returns El registro de stock actualizado
+   * @throws Error si no hay suficiente stock
+   */
+  async decrementStock(productId: string, locationId: string, amount: number): Promise<InventoryStock> {
+    if (amount <= 0) {
+      throw new Error('La cantidad a decrementar debe ser positiva.');
+    }
+
+    const stockItem = await this.inventoryRepository.findOne({
+      where: {
+        product: { id: productId },
+        location: { id: locationId },
+      },
+    });
+
+    if (!stockItem) {
+      // Opcional: Podrías lanzar error o tratarlo como stock 0
+      throw new NotFoundException(`No se encontró stock para el producto ${productId} en la ubicación ${locationId}.`);
+    }
+
+    if (stockItem.quantity < amount) {
+      throw new Error(`Stock insuficiente. Disponible: ${stockItem.quantity}, Requerido: ${amount}`);
+      // Considera usar BadRequestException de @nestjs/common aquí
+    }
+
+    stockItem.quantity -= amount; // Decrementa la cantidad
+    return this.inventoryRepository.save(stockItem);
+  }
+
 }
