@@ -4,11 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany, // 1. Importar OneToMany
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrderItem } from '../../order-items/entities/order-item.entity'; // 2. Importar OrderItem
 
-// Definimos los posibles estados de un pedido
+// ... (export enum OrderStatus ... )
 export enum OrderStatus {
   PENDING = 'PENDIENTE',
   PAID = 'PAGADO',
@@ -17,16 +19,18 @@ export enum OrderStatus {
   CANCELLED = 'CANCELADO',
 }
 
-@Entity('orders') // Nombre de la tabla
+
+@Entity('orders')
 export class Order {
+  // ... (id, userId, locationId, status, total ... )
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'uuid', name: 'user_id' })
-  userId: string; // ID del usuario que crea el pedido (del iam-service)
+  userId: string;
 
   @Column({ type: 'uuid', name: 'location_id' })
-  locationId: string; // ID de la tienda/ubicación donde se hizo la venta (del inventory-service)
+  locationId: string;
 
   @Column({
     type: 'enum',
@@ -38,8 +42,13 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total: number;
 
-  // Aquí irán los @OneToMany con OrderItem
-  // ...
+  // --- 3. Añadir la relación ---
+  @OneToMany(() => OrderItem, (item) => item.order, {
+    cascade: true, // Permite guardar ítems al guardar la orden
+    eager: true, // Carga automáticamente los ítems al buscar una orden
+  })
+  items: OrderItem[];
+  // -------------------------
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
