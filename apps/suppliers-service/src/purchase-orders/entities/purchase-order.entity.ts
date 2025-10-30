@@ -7,62 +7,39 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany, // 1. Importar OneToMany
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PurchaseOrderItem } from '../../purchase-order-items/entities/purchase-order-item.entity'; // 2. Importar
 
-export enum PurchaseOrderStatus {
-  PENDING = 'PENDIENTE',
-  ORDERED = 'ORDENADA',
-  RECEIVED_PARTIAL = 'RECIBIDA_PARCIAL',
-  RECEIVED_COMPLETE = 'RECIBIDA_COMPLETA',
-  CANCELLED = 'CANCELADA',
-}
+// ... (Enums de PurchaseOrderStatus y PaymentStatus) ...
+export enum PurchaseOrderStatus { /* ... */ }
+export enum PaymentStatus { /* ... */ }
 
-export enum PaymentStatus {
-  PENDING = 'PENDIENTE',
-  PARTIAL = 'ABONADO',
-  PAID = 'PAGADO',
-}
-
-@Entity('purchase_orders') // Nombre de la tabla
+@Entity('purchase_orders')
 export class PurchaseOrder {
+  // ... (Columnas id, supplier, status, paymentStatus, totalAmount, amountPaid) ...
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // --- Relación con Supplier ---
   @ManyToOne(() => Supplier, { nullable: false, eager: true })
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
-  // -----------------------------
 
-  @Column({
-    type: 'enum',
-    enum: PurchaseOrderStatus,
-    default: PurchaseOrderStatus.PENDING,
+  // ... (status, paymentStatus, totalAmount, amountPaid) ...
+
+  // --- 3. Añadir la relación ---
+  @OneToMany(() => PurchaseOrderItem, (item) => item.purchaseOrder, {
+    cascade: true, // Guardar ítems al guardar la orden
+    eager: true, // Cargar ítems al buscar la orden
   })
-  status: PurchaseOrderStatus;
-
-  @Column({
-    type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
-    name: 'payment_status',
-  })
-  paymentStatus: PaymentStatus;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'total_amount', default: 0 })
-  totalAmount: number; // Costo total de la orden
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'amount_paid', default: 0 })
-  amountPaid: number; // Monto abonado
+  items: PurchaseOrderItem[];
+  // -------------------------
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  // Aquí añadiremos la relación @OneToMany con PurchaseOrderItems
-  // ...
 }
