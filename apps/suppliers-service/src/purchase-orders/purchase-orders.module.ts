@@ -10,8 +10,8 @@ import { PurchaseOrderItem } from '../purchase-order-items/entities/purchase-ord
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PurchaseOrder, PurchaseOrderItem]), // 2. Añadir OrderItem
-    SuppliersModule,
+    TypeOrmModule.forFeature([PurchaseOrder, PurchaseOrderItem]), // 2. Añadir PurchaseOrderItem
+    SuppliersModule, // (Ya debe estar importado)
   ],
   controllers: [PurchaseOrdersController],
   providers: [PurchaseOrdersService],

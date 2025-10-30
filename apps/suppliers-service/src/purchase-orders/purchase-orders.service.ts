@@ -4,7 +4,9 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PurchaseOrder, PaymentStatus, PurchaseOrderStatus } from './entities/purchase-order.entity';
+import { PurchaseOrder } from './entities/purchase-order.entity';
+import { PaymentStatus } from './enums/payment-status.enum'; // 2. Importa desde /enums
+import { PurchaseOrderStatus } from './enums/purchase-order-status.enum'; // 3. Importa desde /enums
 import { Repository } from 'typeorm';
 import { SuppliersService } from '../suppliers/suppliers.service';
 import { PurchaseOrderItem } from '../purchase-order-items/entities/purchase-order-item.entity';
@@ -14,6 +16,8 @@ export class PurchaseOrdersService {
   constructor(
     @InjectRepository(PurchaseOrder)
     private readonly purchaseOrderRepository: Repository<PurchaseOrder>,
+
+    // No necesitamos el repositorio de 'PurchaseOrderItem' si usamos 'cascade: true'
 
     // Inyectamos el servicio de proveedores
     private readonly suppliersService: SuppliersService,
@@ -29,27 +33,24 @@ export class PurchaseOrdersService {
 
     // 2. Crear las instancias de los PurchaseOrderItems y calcular el total
     const purchaseOrderItems = items.map(itemDto => {
-      // Calcula el subtotal de este ítem
       totalAmount += itemDto.costPerItem * itemDto.quantity;
 
-      // Crea la entidad PurchaseOrderItem
       const item = new PurchaseOrderItem();
       item.productId = itemDto.productId;
-      item.productName = itemDto.productName; // Nombre denormalizado
+      item.productName = itemDto.productName;
       item.quantity = itemDto.quantity;
       item.costPerItem = itemDto.costPerItem;
       return item;
     });
 
     // 3. Crear la entidad PurchaseOrder
-    const purchaseOrder = this.purchaseOrderRepository.create({
-      supplier: supplier, // Asigna la entidad completa del proveedor
-      items: purchaseOrderItems, // Asigna los ítems
-      totalAmount: totalAmount, // Asigna el total calculado
-      status: PurchaseOrderStatus.PENDING, // Estado inicial
-      paymentStatus: PaymentStatus.PENDING, // Estado de pago inicial
-      amountPaid: 0,
-    });
+    const purchaseOrder = new PurchaseOrder(); // Usar 'new' en lugar de .create()
+    purchaseOrder.supplier = supplier;
+    purchaseOrder.items = purchaseOrderItems;
+    purchaseOrder.totalAmount = totalAmount;
+    purchaseOrder.status = PurchaseOrderStatus.PENDING;
+    purchaseOrder.paymentStatus = PaymentStatus.PENDING;
+    purchaseOrder.amountPaid = 0;
 
     try {
       // 4. Guardar la Orden de Compra (y sus ítems, gracias a 'cascade: true')

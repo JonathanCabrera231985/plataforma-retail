@@ -7,19 +7,16 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany, // 1. Importar OneToMany
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PurchaseOrderItem } from '../../purchase-order-items/entities/purchase-order-item.entity'; // 2. Importar
-
-// ... (Enums de PurchaseOrderStatus y PaymentStatus) ...
-export enum PurchaseOrderStatus { /* ... */ }
-export enum PaymentStatus { /* ... */ }
+import { PurchaseOrderItem } from '../../purchase-order-items/entities/purchase-order-item.entity';
+import { PurchaseOrderStatus } from '../enums/purchase-order-status.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 @Entity('purchase_orders')
 export class PurchaseOrder {
-  // ... (Columnas id, supplier, status, paymentStatus, totalAmount, amountPaid) ...
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -27,15 +24,32 @@ export class PurchaseOrder {
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
 
-  // ... (status, paymentStatus, totalAmount, amountPaid) ...
+  @Column({
+    type: 'enum',
+    enum: PurchaseOrderStatus,
+    default: PurchaseOrderStatus.PENDING,
+  })
+  status: PurchaseOrderStatus;
 
-  // --- 3. Añadir la relación ---
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+    name: 'payment_status',
+  })
+  paymentStatus: PaymentStatus;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'total_amount', default: 0 })
+  totalAmount: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'amount_paid', default: 0 })
+  amountPaid: number;
+
   @OneToMany(() => PurchaseOrderItem, (item) => item.purchaseOrder, {
-    cascade: true, // Guardar ítems al guardar la orden
-    eager: true, // Cargar ítems al buscar la orden
+    cascade: true,
+    eager: true,
   })
   items: PurchaseOrderItem[];
-  // -------------------------
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
