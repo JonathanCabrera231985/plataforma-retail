@@ -1,74 +1,103 @@
 // apps/orders-service/src/orders/orders.service.ts
 
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order, OrderStatus } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { OrderItem } from '../order-items/entities/order-item.entity';
+import { HttpService } from '@nestjs/axios'; // 1. Importar HttpService
+import { firstValueFrom } from 'rxjs'; // 2. Importar firstValueFrom
+
+// DTO que espera el inventory-service (debe coincidir)
+class AdjustStockDto {
+  productId: string;
+  locationId: string;
+  amount: number;
+}
 
 @Injectable()
 export class OrdersService {
+  // Define la URL base del servicio de inventario
+  private inventoryServiceUrl = 'http://localhost:3001/inventory'; // (Puerto del inventory-service)
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
 
-    // 1. Inyectar el repositorio de OrderItem
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
+
+    // 3. Inyectar el HttpService
+    private readonly httpService: HttpService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    // NOTA: En un escenario real, aquí llamaríamos al
-    // inventory-service para verificar y descontar el stock.
-    // Por ahora, solo creamos la orden.
-
     const { userId, locationId, items } = createOrderDto;
     let total = 0;
 
-    // 2. Crear las instancias de los OrderItems y calcular el total
-    const orderItems = items.map(itemDto => {
-      // Calcula el subtotal de este ítem
-      total += itemDto.priceAtPurchase * itemDto.quantity;
+    // --- 4. Verificación y descuento de Stock (Paso Crítico) ---
+    try {
+      // Usamos Promise.all para ejecutar todas las llamadas de descuento en paralelo
+      await Promise.all(
+        items.map(itemDto => {
+          const stockAdjustment: AdjustStockDto = {
+            productId: itemDto.productId,
+            locationId: locationId, // Descontamos de la ubicación de la venta
+            amount: itemDto.quantity,
+          };
+          
+          // Llama al endpoint /decrement del inventory-service
+          const request = this.httpService.post(
+            `${this.inventoryServiceUrl}/decrement`,
+            stockAdjustment,
+          );
+          return firstValueFrom(request); // Convierte el Observable en una Promesa
+        }),
+      );
+    } catch (error) {
+      // Si falla (ej. "Stock insuficiente" o el servicio está caído)
+      console.error('Fallo al descontar stock:', error.response?.data || error.message);
+      // Lanza un error claro al cliente
+      throw new BadRequestException(`Error al procesar el inventario: ${error.response?.data?.message || 'Servicio no disponible'}`);
+    }
+    // --- Fin de la verificación de stock ---
 
-      // Crea la entidad OrderItem
+    // 5. Si el stock se descontó correctamente, procede a crear la orden
+    const orderItems = items.map(itemDto => {
+      total += itemDto.priceAtPurchase * itemDto.quantity;
       const item = new OrderItem();
       item.productId = itemDto.productId;
       item.quantity = itemDto.quantity;
       item.priceAtPurchase = itemDto.priceAtPurchase;
       return item;
-      // No guardamos el 'order' aquí; TypeORM lo hará por la cascada
     });
 
-    // 3. Crear la entidad Order
     const order = this.orderRepository.create({
       userId,
       locationId,
-      total: total, // Asigna el total calculado
-      status: OrderStatus.PENDING, // Estado inicial
-      items: orderItems, // Asigna los ítems
+      total: total,
+      status: OrderStatus.PAID, // Marcamos como PAGADO ya que el stock fue descontado
+      items: orderItems,
     });
 
     try {
-      // 4. Guardar la Orden.
-      // Gracias a {cascade: true, eager: true} en la entidad Order,
-      // TypeORM guardará la 'order' y todos sus 'orderItems' asociados
-      // en una sola transacción.
       return await this.orderRepository.save(order);
     } catch (error) {
+      // TODO: Aquí deberíamos tener lógica para revertir la llamada de stock si
+      // falla el guardado de la orden (Saga Pattern).
       console.error(error);
-      throw new InternalServerErrorException('Error al crear la orden.');
+      throw new InternalServerErrorException('Error al crear la orden después de descontar stock.');
     }
   }
 
+  // ... (findAll, findOne, update, remove) ...
   findAll() {
-    // ... (Implementar lógica de listar órdenes)
     return this.orderRepository.find();
   }
 
   findOne(id: string) {
-     // ... (Implementar lógica de buscar una orden)
     return `This action returns a #${id} order`;
   }
 
