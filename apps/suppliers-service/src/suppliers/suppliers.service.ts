@@ -1,35 +1,61 @@
 // apps/suppliers-service/src/suppliers/suppliers.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
-// ... (probablemente falten imports de TypeORM aquí)
+import { InjectRepository } from '@nestjs/typeorm';
+import { Supplier } from './entities/supplier.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SuppliersService {
+  constructor(
+    // 1. Inyectar el repositorio de Supplier
+    @InjectRepository(Supplier)
+    private readonly supplierRepository: Repository<Supplier>,
+  ) {}
 
-  // (Aquí irá tu constructor con @InjectRepository)
+  async create(createSupplierDto: CreateSupplierDto): Promise<Supplier> {
+    // 2. Crear la instancia de la entidad
+    const supplier = this.supplierRepository.create(createSupplierDto);
 
-  create(createSupplierDto: CreateSupplierDto) {
-    return 'This action adds a new supplier';
+    try {
+      // 3. Guardar en la base de datos
+      return await this.supplierRepository.save(supplier);
+    } catch (error) {
+      // 4. Manejar error de nombre o RUC duplicado (código '23505')
+      if (error.code === '23505') {
+        if (error.detail.includes('name')) {
+          throw new ConflictException('El nombre del proveedor ya existe');
+        }
+        if (error.detail.includes('ruc')) {
+          throw new ConflictException('El RUC del proveedor ya existe');
+        }
+      }
+      console.error(error); // Loguea otros errores
+      throw new InternalServerErrorException('Error al crear el proveedor');
+    }
   }
 
-  findAll() {
-    return `This action returns all suppliers`;
+  findAll(): Promise<Supplier[]> {
+    return this.supplierRepository.find();
   }
 
-  // --- CORRECCIÓN AQUÍ ---
-  findOne(id: string) { // Cambia 'number' a 'string'
-    return `This action returns a #${id} supplier`;
+  async findOne(id: string): Promise<Supplier> {
+    const supplier = await this.supplierRepository.findOne({ where: { id } });
+    if (!supplier) {
+      throw new NotFoundException(`Proveedor con ID "${id}" no encontrado`);
+    }
+    return supplier;
   }
 
-  // --- CORRECCIÓN AQUÍ ---
-  update(id: string, updateSupplierDto: UpdateSupplierDto) { // Cambia 'number' a 'string'
+  update(id: string, updateSupplierDto: UpdateSupplierDto) {
+    // TODO: Implementar lógica de actualización
     return `This action updates a #${id} supplier`;
   }
 
-  // --- CORRECCIÓN AQUÍ ---
-  remove(id: string) { // Cambia 'number' a 'string'
+  remove(id: string) {
+    // TODO: Implementar lógica de borrado
     return `This action removes a #${id} supplier`;
   }
 }
