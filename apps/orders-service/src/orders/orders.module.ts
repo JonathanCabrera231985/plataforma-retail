@@ -5,10 +5,14 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
-import { OrderItem } from '../order-items/entities/order-item.entity'; // 1. Importar OrderItem
+import { OrderItem } from '../order-items/entities/order-item.entity';
+import { HttpModule } from '@nestjs/axios'; // 1. Importar HttpModule
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem])], // 2. Añadir OrderItem aquí
+  imports: [
+    TypeOrmModule.forFeature([Order, OrderItem]),
+    HttpModule, // 2. Añadir HttpModule aquí
+  ],
   controllers: [OrdersController],
   providers: [OrdersService],
 })
