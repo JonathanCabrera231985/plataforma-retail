@@ -6,8 +6,10 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany, // 1. Importar OneToMany
 } from 'typeorm';
 
+import { AttributeValue } from '../../attribute-values/entities/attribute-value.entity'; // 2. Importar
 @Entity('attributes') // Nombre de la tabla
 export class Attribute {
   @PrimaryGeneratedColumn('uuid')
@@ -16,8 +18,13 @@ export class Attribute {
   @Column({ type: 'varchar', length: 100, unique: true })
   name: string; // Ej: "Color", "Altura de Taco", "Material"
 
-  // Más adelante añadiremos una relación @OneToMany con AttributeValue
-  // ...
+  // --- 3. Añadir la relación ---
+  @OneToMany(() => AttributeValue, (value) => value.attribute, {
+    cascade: true, // Guardar valores al guardar el atributo
+    eager: true, // Cargar valores automáticamente
+  })
+  values: AttributeValue[];
+  // -------------------------
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

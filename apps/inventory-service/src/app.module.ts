@@ -10,6 +10,7 @@ import { ProductsModule } from './products/products.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
 import { AttributesModule } from './attributes/attributes.module';
+import { AttributeValuesModule } from './attribute-values/attribute-values.module';
 // No need to import Category entity here anymore if using auto-detect
 
 @Module({
@@ -44,6 +45,8 @@ import { AttributesModule } from './attributes/attributes.module';
     LocationsModule,
 
     AttributesModule,
+
+    AttributeValuesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
