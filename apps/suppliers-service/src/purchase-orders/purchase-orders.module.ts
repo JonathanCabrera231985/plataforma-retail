@@ -15,5 +15,6 @@ import { PurchaseOrderItem } from '../purchase-order-items/entities/purchase-ord
   ],
   controllers: [PurchaseOrdersController],
   providers: [PurchaseOrdersService],
+  exports: [PurchaseOrdersService], // <-- AÑADE ESTA LÍNEA
 })
 export class PurchaseOrdersModule {}
