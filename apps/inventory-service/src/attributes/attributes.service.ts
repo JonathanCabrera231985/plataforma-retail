@@ -12,15 +12,15 @@ export class AttributesService {
     return `This action returns all attributes`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} attribute`;
   }
 
-  update(id: number, updateAttributeDto: UpdateAttributeDto) {
+  update(id: string, updateAttributeDto: UpdateAttributeDto) {
     return `This action updates a #${id} attribute`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} attribute`;
   }
 }
