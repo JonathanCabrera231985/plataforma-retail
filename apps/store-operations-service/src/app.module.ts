@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { StoresModule } from './stores/stores.module';
 
 @Module({
   imports: [
@@ -27,6 +28,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: true, // Dev only
       }),
     }),
+
+    StoresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
