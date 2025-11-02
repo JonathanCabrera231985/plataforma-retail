@@ -4,20 +4,25 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // 1. Importar TypeOrmModuleOptions
 import { SalesReportsModule } from './sales-reports/sales-reports.module';
 // Función auxiliar para generar la configuración de conexión
-const createDbConfig = (configService: ConfigService, name: string, dbEnvVar: string) => ({
-  name: name, // Nombre único para la conexión
-  type: 'postgres',
+// 2. Función auxiliar con tipo de retorno explícito
+const createDbConfig = (
+  configService: ConfigService,
+  name: string,
+  dbEnvVar: string,
+): TypeOrmModuleOptions => ({ // 3. Añadir el tipo de retorno aquí
+  name: name,
+  type: 'postgres', // Esto ahora se validará contra el tipo
   host: configService.get<string>('DB_HOST'),
   port: configService.get<number>('DB_PORT'),
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
-  database: configService.get<string>(dbEnvVar), // Variable .env específica
-  entities: [], // Definiremos entidades de solo lectura por módulo
-  autoLoadEntities: false, // No cargar entidades automáticamente
-  synchronize: false, // ¡MUY IMPORTANTE! Nunca sincronizar un servicio de reportes
+  database: configService.get<string>(dbEnvVar),
+  entities: [],
+  autoLoadEntities: false,
+  synchronize: false, // ¡Muy importante que sea false!
 });
 
 @Module({
