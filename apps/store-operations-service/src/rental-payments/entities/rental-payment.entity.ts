@@ -39,6 +39,11 @@ export class RentalPayment {
   })
   status: RentalPaymentStatus;
 
+  // --- AÑADE ESTA COLUMNA ---
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+  // -------------------------
+
   // ID del usuario de "Maria Fernanda" que aprueba el pago
   @Column({ type: 'uuid', name: 'approved_by_mf_user_id', nullable: true })
   approvedByMfUserId: string;

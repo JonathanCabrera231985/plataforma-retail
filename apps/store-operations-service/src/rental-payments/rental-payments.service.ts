@@ -8,6 +8,8 @@ import { RentalPayment } from './entities/rental-payment.entity';
 import { Repository } from 'typeorm';
 import { StoresService } from '../stores/stores.service';
 import { RentalPaymentStatus } from './enums/rental-payment-status.enum';
+import { ApprovePaymentDto } from './dto/approve-payment.dto';
+import { MarkAsPaidDto } from './dto/mark-as-paid.dto';
 
 @Injectable()
 export class RentalPaymentsService {
@@ -69,9 +71,63 @@ export class RentalPaymentsService {
     return payment;
   }
 
+  /**
+   * Aprueba un pago de alquiler (Acción de Maria Fernanda)
+   */
+  async approve(id: string, approvePaymentDto: ApprovePaymentDto): Promise<RentalPayment> {
+    const { approvedByMfUserId } = approvePaymentDto;
+
+    // 1. Buscar el pago
+    const payment = await this.findOne(id);
+
+    // 2. Validar el estado
+    if (payment.status !== RentalPaymentStatus.PENDING_APPROVAL) {
+      throw new BadRequestException(`Este pago no está pendiente de aprobación (Estado actual: ${payment.status})`);
+    }
+
+    // 3. Actualizar estado y guardar
+    payment.status = RentalPaymentStatus.APPROVED;
+    payment.approvedByMfUserId = approvedByMfUserId;
+
+    try {
+      return await this.rentalPaymentRepository.save(payment);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al aprobar el pago.');
+    }
+  }
+
+  /**
+   * Marca un pago aprobado como PAGADO
+   */
+  async markAsPaid(id: string, markAsPaidDto: MarkAsPaidDto): Promise<RentalPayment> {
+    const { notes } = markAsPaidDto;
+
+    // 1. Buscar el pago
+    const payment = await this.findOne(id);
+
+    // 2. Validar el estado
+    if (payment.status !== RentalPaymentStatus.APPROVED) {
+      throw new BadRequestException(`Este pago no puede marcarse como pagado (Estado actual: ${payment.status})`);
+    }
+
+    // 3. Actualizar estado y guardar
+    payment.status = RentalPaymentStatus.PAID;
+    payment.paymentDate = new Date(); // Registra la fecha de pago
+    if (notes) {
+      payment.notes = notes;
+    }
+
+    try {
+      return await this.rentalPaymentRepository.save(payment);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al marcar el pago como pagado.');
+    }
+  }
+  // Dejamos este 'update' genérico vacío por ahora, ya que usamos métodos específicos
   update(id: string, updateRentalPaymentDto: UpdateRentalPaymentDto) {
-    // TODO: Implementar lógica de actualización (Aprobar, Pagar)
-    return `This action updates a #${id} rentalPayment`;
+    return `Use los endpoints /approve o /pay para actualizar el estado de un pago.`;
   }
 
   remove(id: string) {
