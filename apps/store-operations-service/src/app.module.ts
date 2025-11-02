@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoresModule } from './stores/stores.module';
 import { WorkdaysModule } from './workdays/workdays.module';
 import { AccessLogsModule } from './access-logs/access-logs.module';
+import { RentalPaymentsModule } from './rental-payments/rental-payments.module';
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { AccessLogsModule } from './access-logs/access-logs.module';
     WorkdaysModule,
 
     AccessLogsModule,
+
+    RentalPaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
