@@ -12,15 +12,15 @@ export class AccessLogsService {
     return `This action returns all accessLogs`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} accessLog`;
   }
 
-  update(id: number, updateAccessLogDto: UpdateAccessLogDto) {
+  update(id: string, updateAccessLogDto: UpdateAccessLogDto) {
     return `This action updates a #${id} accessLog`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} accessLog`;
   }
 }

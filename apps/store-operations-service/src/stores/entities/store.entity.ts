@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { OneToMany } from 'typeorm';
 import { Workday } from '../../workdays/entities/workday.entity';
+import { AccessLog } from '../../access-logs/entities/access-log.entity';
 
 @Entity('stores') // Nombre de la tabla
 export class Store {
@@ -39,4 +40,7 @@ export class Store {
  // Añadir esto:
   @OneToMany(() => Workday, (workday) => workday.store)
   workdays: Workday[];
+  // Añadir esto:
+  @OneToMany(() => AccessLog, (log) => log.store)
+  accessLogs: AccessLog[];
 }

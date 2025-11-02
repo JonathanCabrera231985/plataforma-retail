@@ -19,16 +19,16 @@ export class AccessLogsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.accessLogsService.findOne(+id);
+    return this.accessLogsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAccessLogDto: UpdateAccessLogDto) {
-    return this.accessLogsService.update(+id, updateAccessLogDto);
+    return this.accessLogsService.update(id, updateAccessLogDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.accessLogsService.remove(+id);
+    return this.accessLogsService.remove(id);
   }
 }
