@@ -1,6 +1,6 @@
 // apps/store-operations-service/src/access-logs/access-logs.service.ts
 
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException , UnauthorizedException} from '@nestjs/common';
 import { CreateAccessLogDto } from './dto/create-access-log.dto';
 import { UpdateAccessLogDto } from './dto/update-access-log.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -60,9 +60,36 @@ export class AccessLogsService {
     return accessLog;
   }
 
-  update(id: string, updateAccessLogDto: UpdateAccessLogDto) {
-    // TODO: Implementar lógica de actualización (Aprobar, Rechazar)
-    return `This action updates a #${id} accessLog`;
+ /**
+   * Aprueba o rechaza una solicitud de ingreso
+   */
+  async update(id: string, updateAccessLogDto: UpdateAccessLogDto): Promise<AccessLog> {
+    const { approvingUserId, status } = updateAccessLogDto;
+
+    // 1. Buscar el registro de acceso (findOne carga la tienda)
+    const accessLog = await this.findOne(id);
+
+    // 2. Validar el estado
+    if (accessLog.status !== AccessStatus.PENDING) {
+      throw new BadRequestException(`Este registro de acceso ya fue procesado (Estado actual: ${accessLog.status})`);
+    }
+
+    // 3. ¡Verificación de Autorización!
+    // Comprueba que el ID del aprobador coincida con el ID del dueño de la tienda.
+    if (accessLog.store.ownerUserId !== approvingUserId) {
+      throw new UnauthorizedException('Este usuario no es el dueño de la tienda y no puede aprobar este ingreso.');
+    }
+
+    // 4. Actualizar el estado y guardar
+    accessLog.status = status;
+    accessLog.approvedByOwnerId = approvingUserId;
+
+    try {
+      return await this.accessLogRepository.save(accessLog);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al actualizar el registro de acceso.');
+    }
   }
 
   remove(id: string) {
