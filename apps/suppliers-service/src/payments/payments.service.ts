@@ -7,7 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Payment } from './entities/payment.entity';
 import { DataSource, Repository } from 'typeorm';
 import { PurchaseOrdersService } from '../purchase-orders/purchase-orders.service';
-import { PaymentStatus, PurchaseOrder } from '../purchase-orders/entities/purchase-order.entity';
+import { PurchaseOrder } from '../purchase-orders/entities/purchase-order.entity';
+import { PaymentStatus } from '../purchase-orders/enums/payment-status.enum'; // <-- Importa desde la ruta correcta
 
 @Injectable()
 export class PaymentsService {
