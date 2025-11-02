@@ -7,6 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoresModule } from './stores/stores.module';
 import { WorkdaysModule } from './workdays/workdays.module';
+import { AccessLogsModule } from './access-logs/access-logs.module';
 
 @Module({
   imports: [
@@ -33,6 +34,8 @@ import { WorkdaysModule } from './workdays/workdays.module';
     StoresModule,
 
     WorkdaysModule,
+
+    AccessLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
