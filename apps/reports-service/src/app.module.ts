@@ -7,6 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // 1. Importar TypeOrmModuleOptions
 import { SalesReportsModule } from './sales-reports/sales-reports.module'; // Asegúrate de importar tus módulos de reportes
 import { InventoryReportsModule } from './inventory-reports/inventory-reports.module'; // Asegúrate de importar tus módulos de reportes
+import { SuppliersReportsModule } from './suppliers-reports/suppliers-reports.module';
 
 // 2. Función auxiliar con tipo de retorno explícito
 const createDbConfig = (
@@ -81,6 +82,7 @@ const createDbConfig = (
     // Módulos de reportes
     SalesReportsModule,
     InventoryReportsModule,
+    SuppliersReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
