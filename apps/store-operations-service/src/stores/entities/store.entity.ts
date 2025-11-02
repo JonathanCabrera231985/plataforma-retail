@@ -7,6 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OneToMany } from 'typeorm';
+import { Workday } from '../../workdays/entities/workday.entity';
 
 @Entity('stores') // Nombre de la tabla
 export class Store {
@@ -34,4 +36,7 @@ export class Store {
 
   // Aquí irán las relaciones @OneToMany con Jornadas, Pagos de Alquiler, etc.
   // ...
+ // Añadir esto:
+  @OneToMany(() => Workday, (workday) => workday.store)
+  workdays: Workday[];
 }

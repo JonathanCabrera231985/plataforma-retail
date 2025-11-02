@@ -12,15 +12,15 @@ export class WorkdaysService {
     return `This action returns all workdays`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} workday`;
   }
 
-  update(id: number, updateWorkdayDto: UpdateWorkdayDto) {
+  update(id: string, updateWorkdayDto: UpdateWorkdayDto) {
     return `This action updates a #${id} workday`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} workday`;
   }
 }

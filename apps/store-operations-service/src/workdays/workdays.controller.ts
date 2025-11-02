@@ -19,16 +19,16 @@ export class WorkdaysController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.workdaysService.findOne(+id);
+    return this.workdaysService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateWorkdayDto: UpdateWorkdayDto) {
-    return this.workdaysService.update(+id, updateWorkdayDto);
+    return this.workdaysService.update(id, updateWorkdayDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.workdaysService.remove(+id);
+    return this.workdaysService.remove(id);
   }
 }

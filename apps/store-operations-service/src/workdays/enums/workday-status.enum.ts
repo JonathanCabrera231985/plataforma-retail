@@ -1,0 +1,5 @@
+export enum WorkdayStatus {
+  PENDING_APPROVAL = 'PENDIENTE_APROBACION',
+  OPEN = 'ABIERTA',
+  CLOSED = 'CERRADA',
+}
