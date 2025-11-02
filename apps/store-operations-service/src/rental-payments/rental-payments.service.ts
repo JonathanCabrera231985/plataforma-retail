@@ -12,15 +12,15 @@ export class RentalPaymentsService {
     return `This action returns all rentalPayments`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} rentalPayment`;
   }
 
-  update(id: number, updateRentalPaymentDto: UpdateRentalPaymentDto) {
+  update(id: string, updateRentalPaymentDto: UpdateRentalPaymentDto) {
     return `This action updates a #${id} rentalPayment`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} rentalPayment`;
   }
 }
