@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { SalesReportsModule } from './sales-reports/sales-reports.module';
 // Función auxiliar para generar la configuración de conexión
 const createDbConfig = (configService: ConfigService, name: string, dbEnvVar: string) => ({
   name: name, // Nombre único para la conexión
@@ -66,7 +66,8 @@ const createDbConfig = (configService: ConfigService, name: string, dbEnvVar: st
       inject: [ConfigService],
       useFactory: (config: ConfigService) => createDbConfig(config, 'store_ops_connection', 'DB_NAME_STORE_OPS'),
     }),
-  ],
+    SalesReportsModule,
+  ],  
   controllers: [AppController],
   providers: [AppService],
 })
