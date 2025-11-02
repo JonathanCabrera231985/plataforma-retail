@@ -8,6 +8,8 @@ import { Workday } from './entities/workday.entity';
 import { In, Repository } from 'typeorm';
 import { StoresService } from '../stores/stores.service';
 import { WorkdayStatus } from './enums/workday-status.enum';
+import { ApproveWorkdayDto } from './dto/approve-workday.dto';
+import { UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class WorkdaysService {
@@ -69,6 +71,38 @@ export class WorkdaysService {
       throw new NotFoundException(`Jornada con ID "${id}" no encontrada`);
     }
     return workday;
+  }
+
+  /**
+   * Aprueba una jornada pendiente.
+   */
+  async approveWorkday(id: string, approveWorkdayDto: ApproveWorkdayDto): Promise<Workday> {
+    const { approvingUserId } = approveWorkdayDto;
+
+    // 1. Buscar la jornada (findOne ya incluye la tienda por 'eager: true')
+    const workday = await this.findOne(id); // findOne ya lanza NotFoundException
+
+    // 2. Validar el estado
+    if (workday.status !== WorkdayStatus.PENDING_APPROVAL) {
+      throw new BadRequestException(`La jornada no está pendiente de aprobación (Estado actual: ${workday.status})`);
+    }
+
+    // 3. ¡Verificación de autorización!
+    // Comprueba que el ID del aprobador coincida con el ID del dueño de la tienda.
+    if (workday.store.ownerUserId !== approvingUserId) {
+      throw new UnauthorizedException('Este usuario no es el dueño de la tienda y no puede aprobar la jornada.');
+    }
+
+    // 4. Actualizar el estado y guardar
+    workday.status = WorkdayStatus.OPEN;
+    workday.approvedByOwnerId = approvingUserId;
+
+    try {
+      return await this.workdayRepository.save(workday);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al aprobar la jornada.');
+    }
   }
 
   update(id: string, updateWorkdayDto: UpdateWorkdayDto) {

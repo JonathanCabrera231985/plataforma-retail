@@ -2,7 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { WorkdaysService } from './workdays.service';
 import { CreateWorkdayDto } from './dto/create-workday.dto';
 import { UpdateWorkdayDto } from './dto/update-workday.dto';
-
+import { HttpCode, HttpStatus } from '@nestjs/common';
+import { ApproveWorkdayDto } from './dto/approve-workday.dto';
 @Controller('workdays')
 export class WorkdaysController {
   constructor(private readonly workdaysService: WorkdaysService) {}
@@ -21,6 +22,17 @@ export class WorkdaysController {
   findOne(@Param('id') id: string) {
     return this.workdaysService.findOne(id);
   }
+
+  // --- NUEVO ENDPOINT PARA APROBAR ---
+  @Patch(':id/approve')
+  @HttpCode(HttpStatus.OK) // Devuelve 200 OK
+  approve(
+    @Param('id') id: string,
+    @Body() approveWorkdayDto: ApproveWorkdayDto,
+  ) {
+    return this.workdaysService.approveWorkday(id, approveWorkdayDto);
+  }
+  // ---------------------------------
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateWorkdayDto: UpdateWorkdayDto) {
