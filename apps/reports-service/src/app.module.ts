@@ -5,24 +5,24 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // 1. Importar TypeOrmModuleOptions
-import { SalesReportsModule } from './sales-reports/sales-reports.module';
-import { InventoryReportsModule } from './inventory-reports/inventory-reports.module';
-// Función auxiliar para generar la configuración de conexión
+import { SalesReportsModule } from './sales-reports/sales-reports.module'; // Asegúrate de importar tus módulos de reportes
+import { InventoryReportsModule } from './inventory-reports/inventory-reports.module'; // Asegúrate de importar tus módulos de reportes
+
 // 2. Función auxiliar con tipo de retorno explícito
 const createDbConfig = (
   configService: ConfigService,
   name: string,
   dbEnvVar: string,
-): TypeOrmModuleOptions => ({ // 3. Añadir el tipo de retorno aquí
+): TypeOrmModuleOptions => ({
   name: name,
-  type: 'postgres', // Esto ahora se validará contra el tipo
+  type: 'postgres',
   host: configService.get<string>('DB_HOST'),
   port: configService.get<number>('DB_PORT'),
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>(dbEnvVar),
-  entities: [],
-  autoLoadEntities: false,
+  // entities: [], // <-- ELIMINA ESTA LÍNEA
+  autoLoadEntities: true, // <-- CAMBIA ESTO A TRUE
   synchronize: false, // ¡Muy importante que sea false!
 });
 
@@ -38,7 +38,8 @@ const createDbConfig = (
       name: 'iam_connection',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => createDbConfig(config, 'iam_connection', 'DB_NAME_IAM'),
+      useFactory: (config: ConfigService) =>
+        createDbConfig(config, 'iam_connection', 'DB_NAME_IAM'),
     }),
 
     // Conexión a la BD de Inventario
@@ -46,7 +47,8 @@ const createDbConfig = (
       name: 'inventory_connection',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => createDbConfig(config, 'inventory_connection', 'DB_NAME_INVENTORY'),
+      useFactory: (config: ConfigService) =>
+        createDbConfig(config, 'inventory_connection', 'DB_NAME_INVENTORY'),
     }),
 
     // Conexión a la BD de Órdenes
@@ -54,7 +56,8 @@ const createDbConfig = (
       name: 'orders_connection',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => createDbConfig(config, 'orders_connection', 'DB_NAME_ORDERS'),
+      useFactory: (config: ConfigService) =>
+        createDbConfig(config, 'orders_connection', 'DB_NAME_ORDERS'),
     }),
 
     // Conexión a la BD de Proveedores
@@ -62,7 +65,8 @@ const createDbConfig = (
       name: 'suppliers_connection',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => createDbConfig(config, 'suppliers_connection', 'DB_NAME_SUPPLIERS'),
+      useFactory: (config: ConfigService) =>
+        createDbConfig(config, 'suppliers_connection', 'DB_NAME_SUPPLIERS'),
     }),
 
     // Conexión a la BD de Operaciones de Tienda
@@ -70,11 +74,14 @@ const createDbConfig = (
       name: 'store_ops_connection',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => createDbConfig(config, 'store_ops_connection', 'DB_NAME_STORE_OPS'),
+      useFactory: (config: ConfigService) =>
+        createDbConfig(config, 'store_ops_connection', 'DB_NAME_STORE_OPS'),
     }),
+
+    // Módulos de reportes
     SalesReportsModule,
     InventoryReportsModule,
-  ],  
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

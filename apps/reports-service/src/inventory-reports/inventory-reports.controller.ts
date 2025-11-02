@@ -1,34 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// apps/reports-service/src/inventory-reports/inventory-reports.controller.ts
+
+import { Controller, Get, Param } from '@nestjs/common'; // Solo importamos Get y Param
 import { InventoryReportsService } from './inventory-reports.service';
-import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
-import { UpdateInventoryReportDto } from './dto/update-inventory-report.dto';
+// Eliminamos los DTOs y otros métodos (Post, Patch, Delete)
 
 @Controller('inventory-reports')
 export class InventoryReportsController {
   constructor(private readonly inventoryReportsService: InventoryReportsService) {}
 
-  @Post()
-  create(@Body() createInventoryReportDto: CreateInventoryReportDto) {
-    return this.inventoryReportsService.create(createInventoryReportDto);
+  @Get('detailed-stock') // Endpoint: GET /inventory-reports/detailed-stock
+  getDetailedStock() {
+    return this.inventoryReportsService.getDetailedStockReport();
   }
 
-  @Get()
-  findAll() {
-    return this.inventoryReportsService.findAll();
+  @Get('by-location/:locationId') // Endpoint: GET /inventory-reports/by-location/uuid-de-la-ubicacion
+  getStockByLocation(@Param('locationId') locationId: string) {
+    // Validaremos el UUID con un Pipe más adelante
+    return this.inventoryReportsService.getStockByLocation(locationId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.inventoryReportsService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInventoryReportDto: UpdateInventoryReportDto) {
-    return this.inventoryReportsService.update(id, updateInventoryReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.inventoryReportsService.remove(id);
-  }
+  // Eliminamos los endpoints create(), update(), y remove()
 }

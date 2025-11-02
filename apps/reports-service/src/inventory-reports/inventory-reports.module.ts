@@ -12,8 +12,8 @@ import { InventoryStock } from './entities/inventory-stock.entity'; // 4. Import
   imports: [
     // 5. Conectar estas entidades usando la conexión 'inventory_connection'
     TypeOrmModule.forFeature(
-      [Product, Location, InventoryStock],
-      'inventory_connection', // <-- Nombre de la conexión
+      [Product, Location, InventoryStock], // <-- Faltaba esto
+      'inventory_connection', // <-- Especifica la conexión correcta
     ),
   ],
   controllers: [InventoryReportsController],
