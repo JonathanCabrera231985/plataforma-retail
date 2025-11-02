@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // 1. Importar TypeOrmModuleOptions
 import { SalesReportsModule } from './sales-reports/sales-reports.module';
+import { InventoryReportsModule } from './inventory-reports/inventory-reports.module';
 // Función auxiliar para generar la configuración de conexión
 // 2. Función auxiliar con tipo de retorno explícito
 const createDbConfig = (
@@ -72,6 +73,7 @@ const createDbConfig = (
       useFactory: (config: ConfigService) => createDbConfig(config, 'store_ops_connection', 'DB_NAME_STORE_OPS'),
     }),
     SalesReportsModule,
+    InventoryReportsModule,
   ],  
   controllers: [AppController],
   providers: [AppService],
