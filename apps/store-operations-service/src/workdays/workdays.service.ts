@@ -10,6 +10,8 @@ import { StoresService } from '../stores/stores.service';
 import { WorkdayStatus } from './enums/workday-status.enum';
 import { ApproveWorkdayDto } from './dto/approve-workday.dto';
 import { UnauthorizedException } from '@nestjs/common';
+import { CloseWorkdayDto } from './dto/close-workday.dto';
+
 
 @Injectable()
 export class WorkdaysService {
@@ -102,6 +104,32 @@ export class WorkdaysService {
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException('Error al aprobar la jornada.');
+    }
+  }
+  /**
+   * Cierra una jornada abierta.
+   */
+  async closeWorkday(id: string, closeWorkdayDto: CloseWorkdayDto): Promise<Workday> {
+    const { closedByUserId } = closeWorkdayDto;
+
+    // 1. Buscar la jornada
+    const workday = await this.findOne(id); // findOne ya lanza NotFoundException
+
+    // 2. Validar el estado
+    if (workday.status !== WorkdayStatus.OPEN) {
+      throw new BadRequestException(`La jornada no puede cerrarse (Estado actual: ${workday.status}). Solo se pueden cerrar jornadas 'ABIERTAS'.`);
+    }
+
+    // 3. Actualizar el estado y guardar
+    workday.status = WorkdayStatus.CLOSED;
+    workday.closedByUserId = closedByUserId;
+    workday.closedAt = new Date(); // Registra la hora de cierre
+
+    try {
+      return await this.workdayRepository.save(workday);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error al cerrar la jornada.');
     }
   }
 

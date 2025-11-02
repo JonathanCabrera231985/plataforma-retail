@@ -4,6 +4,7 @@ import { CreateWorkdayDto } from './dto/create-workday.dto';
 import { UpdateWorkdayDto } from './dto/update-workday.dto';
 import { HttpCode, HttpStatus } from '@nestjs/common';
 import { ApproveWorkdayDto } from './dto/approve-workday.dto';
+import { CloseWorkdayDto } from './dto/close-workday.dto';
 @Controller('workdays')
 export class WorkdaysController {
   constructor(private readonly workdaysService: WorkdaysService) {}
@@ -31,6 +32,17 @@ export class WorkdaysController {
     @Body() approveWorkdayDto: ApproveWorkdayDto,
   ) {
     return this.workdaysService.approveWorkday(id, approveWorkdayDto);
+  }
+  // ---------------------------------
+
+  // --- NUEVO ENDPOINT PARA CERRAR ---
+  @Patch(':id/close')
+  @HttpCode(HttpStatus.OK) // Devuelve 200 OK
+  close(
+    @Param('id') id: string,
+    @Body() closeWorkdayDto: CloseWorkdayDto,
+  ) {
+    return this.workdaysService.closeWorkday(id, closeWorkdayDto);
   }
   // ---------------------------------
 
