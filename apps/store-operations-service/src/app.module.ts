@@ -9,7 +9,9 @@ import { StoresModule } from './stores/stores.module';
 import { WorkdaysModule } from './workdays/workdays.module';
 import { AccessLogsModule } from './access-logs/access-logs.module';
 import { RentalPaymentsModule } from './rental-payments/rental-payments.module';
-
+// 1. Importar Passport y la Estrategia
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +33,8 @@ import { RentalPaymentsModule } from './rental-payments/rental-payments.module';
         synchronize: true, // Dev only
       }),
     }),
+    // 3. Añadir PassportModule
+    PassportModule.register({ defaultStrategy: 'jwt' }),
 
     StoresModule,
 
@@ -41,6 +45,9 @@ import { RentalPaymentsModule } from './rental-payments/rental-payments.module';
     RentalPaymentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtStrategy, // 4. Añadir JwtStrategy como provider
+  ],
 })
 export class AppModule {}
