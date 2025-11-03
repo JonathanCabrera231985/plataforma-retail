@@ -1,34 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// apps/reports-service/src/store-ops-reports/store-ops-reports.controller.ts
+
+import { Controller, Get } from '@nestjs/common'; // Solo importamos Get
 import { StoreOpsReportsService } from './store-ops-reports.service';
-import { CreateStoreOpsReportDto } from './dto/create-store-ops-report.dto';
-import { UpdateStoreOpsReportDto } from './dto/update-store-ops-report.dto';
 
 @Controller('store-ops-reports')
 export class StoreOpsReportsController {
   constructor(private readonly storeOpsReportsService: StoreOpsReportsService) {}
 
-  @Post()
-  create(@Body() createStoreOpsReportDto: CreateStoreOpsReportDto) {
-    return this.storeOpsReportsService.create(createStoreOpsReportDto);
-  }
-
   @Get()
   findAll() {
+    // Llama al método 'findAll' del servicio, que devuelve el resumen de alquileres pendientes.
     return this.storeOpsReportsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.storeOpsReportsService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoreOpsReportDto: UpdateStoreOpsReportDto) {
-    return this.storeOpsReportsService.update(id, updateStoreOpsReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.storeOpsReportsService.remove(id);
-  }
+  // Eliminamos create, findOne, update, y remove
 }
