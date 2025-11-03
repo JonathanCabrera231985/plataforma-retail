@@ -7,6 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrdersModule } from './orders/orders.module';
 import { OrderItemsModule } from './order-items/order-items.module';
+import { PassportModule } from '@nestjs/passport'; // 1. Importar Passport
+import { JwtStrategy } from './auth/strategies/jwt.strategy'; // 2. Importar la Estrategia
 
 @Module({
   imports: [
@@ -29,12 +31,16 @@ import { OrderItemsModule } from './order-items/order-items.module';
         synchronize: true, // Dev only
       }),
     }),
-
+    // 3. Añadir PassportModule
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    
     OrdersModule,
-
     OrderItemsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtStrategy, // 4. Añadir JwtStrategy como provider
+  ],
 })
 export class AppModule {}
