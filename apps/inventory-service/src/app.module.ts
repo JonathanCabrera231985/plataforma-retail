@@ -11,6 +11,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { LocationsModule } from './locations/locations.module';
 import { AttributesModule } from './attributes/attributes.module';
 import { AttributeValuesModule } from './attribute-values/attribute-values.module';
+import { PassportModule } from '@nestjs/passport'; // 1. Importar
+import { JwtStrategy } from './auth/strategies/jwt.strategy'; // 2. Importar
 // No need to import Category entity here anymore if using auto-detect
 
 @Module({
@@ -47,8 +49,10 @@ import { AttributeValuesModule } from './attribute-values/attribute-values.modul
     AttributesModule,
 
     AttributeValuesModule,
+
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtStrategy], // 4. Añadir JwtStrategy a los providers
 })
 export class AppModule {}
