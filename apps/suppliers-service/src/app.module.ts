@@ -9,6 +9,9 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { PurchaseOrderItemsModule } from './purchase-order-items/purchase-order-items.module';
 import { PaymentsModule } from './payments/payments.module';
+// 1. Importar Passport y la Estrategia
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { PaymentsModule } from './payments/payments.module';
       }),
     }),
 
+    // 3. Añadir PassportModule
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+
     SuppliersModule,
 
     PurchaseOrdersModule,
@@ -41,6 +47,9 @@ import { PaymentsModule } from './payments/payments.module';
     PaymentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtStrategy, // 4. Añadir JwtStrategy como provider
+  ],
 })
 export class AppModule {}
