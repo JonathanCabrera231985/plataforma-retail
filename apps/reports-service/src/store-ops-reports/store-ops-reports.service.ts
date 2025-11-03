@@ -12,15 +12,15 @@ export class StoreOpsReportsService {
     return `This action returns all storeOpsReports`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} storeOpsReport`;
   }
 
-  update(id: number, updateStoreOpsReportDto: UpdateStoreOpsReportDto) {
+  update(id: string, updateStoreOpsReportDto: UpdateStoreOpsReportDto) {
     return `This action updates a #${id} storeOpsReport`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} storeOpsReport`;
   }
 }

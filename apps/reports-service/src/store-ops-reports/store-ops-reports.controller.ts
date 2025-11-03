@@ -19,16 +19,16 @@ export class StoreOpsReportsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.storeOpsReportsService.findOne(+id);
+    return this.storeOpsReportsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateStoreOpsReportDto: UpdateStoreOpsReportDto) {
-    return this.storeOpsReportsService.update(+id, updateStoreOpsReportDto);
+    return this.storeOpsReportsService.update(id, updateStoreOpsReportDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.storeOpsReportsService.remove(+id);
+    return this.storeOpsReportsService.remove(id);
   }
 }
