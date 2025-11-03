@@ -1,12 +1,7 @@
 // apps/reports-service/src/store-ops-reports/entities/workday.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Store } from './store.entity';
-
-export enum WorkdayStatus {
-  PENDING_APPROVAL = 'PENDIENTE_APROBACION',
-  OPEN = 'ABIERTA',
-  CLOSED = 'CERRADA',
-}
+import { WorkdayStatus } from '../enums/workday-status.enum';
 
 @Entity('workdays')
 export class Workday {
