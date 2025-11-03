@@ -1,8 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common'; // Importar UseGuards
 import { OrderItemsService } from './order-items.service';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
+import { AuthGuard } from '@nestjs/passport'; // Importar
+import { RolesGuard } from '../auth/guards/roles.guard'; // Importar
+import { Roles } from '../auth/decorators/roles.decorator'; // Importar
+import { Role } from '../auth/enums/role.enum'; // Importar
 
+@UseGuards(AuthGuard('jwt'), RolesGuard) // 1. Proteger toda la clase
+@Roles(Role.MF_ADMIN) // 2. Solo Admins
 @Controller('order-items')
 export class OrderItemsController {
   constructor(private readonly orderItemsService: OrderItemsService) {}
