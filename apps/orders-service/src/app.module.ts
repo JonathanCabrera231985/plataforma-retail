@@ -9,6 +9,7 @@ import { OrdersModule } from './orders/orders.module';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { PassportModule } from '@nestjs/passport'; // 1. Importar Passport
 import { JwtStrategy } from './auth/strategies/jwt.strategy'; // 2. Importar la Estrategia
+import { OrderItemCustomizationsModule } from './order-item-customizations/order-item-customizations.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { JwtStrategy } from './auth/strategies/jwt.strategy'; // 2. Importar la 
     
     OrdersModule,
     OrderItemsModule,
+    OrderItemCustomizationsModule,
   ],
   controllers: [AppController],
   providers: [

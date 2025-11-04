@@ -28,9 +28,13 @@ WORKDIR /usr/src/app
 # Copiamos solo los node_modules de producción desde la etapa 'builder'
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+
 # Copiamos solo la carpeta 'dist' (el código compilado) desde la etapa 'builder'
 COPY --from=builder /usr/src/app/dist ./dist
 
 # El comando por defecto para iniciar la aplicación
 # (Esto ejecutará 'node dist/main.js')
-CMD [ "npm", "run", "start:prod" ]
+#CMD [ "npm", "run", "start:prod" ]
+CMD [ "node", "dist/main.js" ]

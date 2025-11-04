@@ -23,6 +23,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Añada esta línea para montar el script:
+      - ./init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
     networks:
       - plataforma-net
     healthcheck:

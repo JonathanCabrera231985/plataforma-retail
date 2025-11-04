@@ -6,9 +6,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany, // 1. Importar OneToMany
   PrimaryGeneratedColumn,
 } from 'typeorm';
-
+import { OrderItemCustomization } from '../../order-item-customizations/entities/order-item-customization.entity'; // 2. Importar
 @Entity('order_items')
 export class OrderItem {
   @PrimaryGeneratedColumn('uuid')
@@ -27,4 +28,11 @@ export class OrderItem {
   @ManyToOne(() => Order, (order) => order.items, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;
+  // --- 3. AÑADIR ESTA RELACIÓN ---
+  @OneToMany(() => OrderItemCustomization, (custom) => custom.orderItem, {
+    cascade: true, // Guardar personalizaciones al guardar el ítem
+    eager: true, // Cargar personalizaciones automáticamente
+  })
+  customizations: OrderItemCustomization[];
+  // -----------------------------
 }
