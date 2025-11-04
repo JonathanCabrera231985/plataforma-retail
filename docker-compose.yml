@@ -1,0 +1,106 @@
+version: '3.8'
+
+# Define las redes que usarán los servicios
+networks:
+  plataforma-net:
+    driver: bridge
+
+# Define los volúmenes para persistir datos
+volumes:
+  postgres-data:
+    driver: local
+
+services:
+  # --- Base de Datos ---
+  postgres-db:
+    image: postgres:latest
+    container_name: container_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-usrzapato} # Usa 'usrzapato' como default
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zapato} # Usa 'zapato' como default
+      POSTGRES_DB: plataforma_retail_iam # Docker solo crea la primera BD
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - plataforma-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U usrzapato"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Servicio de Identidad ---
+  iam-service:
+    build: ./apps/iam-service
+    env_file: ./apps/iam-service/.env
+    ports:
+      - "3000:3000" # Puerto del host:Puerto del contenedor
+    depends_on:
+      postgres-db:
+        condition: service_healthy # Espera a que la BD esté lista
+    networks:
+      - plataforma-net
+
+  # --- Servicio de Inventario ---
+  inventory-service:
+    build: ./apps/inventory-service
+    env_file: ./apps/inventory-service/.env
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - plataforma-net
+
+  # --- Servicio de Órdenes ---
+  orders-service:
+    build: ./apps/orders-service
+    env_file: ./apps/orders-service/.env
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      inventory-service: # Depende de que el servicio de inventario esté iniciado
+        condition: service_started
+    networks:
+      - plataforma-net
+
+  # --- Servicio de Proveedores ---
+  suppliers-service:
+    build: ./apps/suppliers-service
+    env_file: ./apps/suppliers-service/.env
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - plataforma-net
+
+  # --- Servicio de Operaciones de Tienda ---
+  store-operations-service:
+    build: ./apps/store-operations-service
+    env_file: ./apps/store-operations-service/.env
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - plataforma-net
+
+  # --- Servicio de Reportes ---
+  reports-service:
+    build: ./apps/reports-service
+    env_file: ./apps/reports-service/.env
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - plataforma-net

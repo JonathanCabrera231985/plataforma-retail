@@ -20,8 +20,8 @@ class AdjustStockDto {
 @Injectable()
 export class OrdersService {
   // Define la URL base del servicio de inventario
-  private inventoryServiceUrl = 'http://localhost:3001/inventory'; // (Puerto del inventory-service)
-
+  //private inventoryServiceUrl = 'http://localhost:3001/inventory'; // (Puerto del inventory-service)
+  private inventoryServiceUrl = 'http://inventory-service:3001/inventory';
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
