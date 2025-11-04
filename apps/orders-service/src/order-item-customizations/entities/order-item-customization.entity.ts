@@ -34,8 +34,8 @@ export class OrderItemCustomization {
 
   // (Opcional) Guardamos los nombres para reportes fáciles
   @Column({ type: 'varchar', name: 'attribute_name', nullable: true })
-  attributeName: string;
+  attributeName: string | null; // <-- AÑADE | null
 
   @Column({ type: 'varchar', name: 'value_name', nullable: true })
-  valueName: string;
+  valueName: string | null; // <-- AÑADE | null
 }
