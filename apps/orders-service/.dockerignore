@@ -1,0 +1,16 @@
+# Ignora los módulos de nodo locales y el caché de npm
+node_modules
+npm-debug.log
+.npm
+
+# Ignora la carpeta de build local
+dist
+.DS_Store
+
+# Ignora los archivos .env (los pasaremos de otra forma)
+.env
+.env.*
+
+# Ignora el caché de VS Code y logs
+.vscode
+*.log
