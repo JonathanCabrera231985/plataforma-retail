@@ -7,11 +7,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from '../order-items/entities/order-item.entity';
 import { HttpModule } from '@nestjs/axios'; // 1. Importar HttpModule
+// 1. Importar la nueva entidad
+import { OrderItemCustomization } from '../order-item-customizations/entities/order-item-customization.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
-    HttpModule, // 2. Añadir HttpModule aquí
+   // 2. Añadir la entidad al array
+    TypeOrmModule.forFeature([Order, OrderItem, OrderItemCustomization]),
+    HttpModule,  
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

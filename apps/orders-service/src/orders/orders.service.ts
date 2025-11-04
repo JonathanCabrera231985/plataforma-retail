@@ -9,6 +9,9 @@ import { Repository } from 'typeorm';
 import { OrderItem } from '../order-items/entities/order-item.entity';
 import { HttpService } from '@nestjs/axios'; // 1. Importar HttpService
 import { firstValueFrom } from 'rxjs'; // 2. Importar firstValueFrom
+// ... (imports existentes)
+import { OrderItemCustomization } from '../order-item-customizations/entities/order-item-customization.entity'; // 1. Importar
+
 
 // DTO que espera el inventory-service (debe coincidir)
 class AdjustStockDto {
@@ -33,64 +36,81 @@ export class OrdersService {
     private readonly httpService: HttpService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    const { userId, locationId, items } = createOrderDto;
-    let total = 0;
+  // Reemplaza tu método 'create' existente con este:
+async create(createOrderDto: CreateOrderDto): Promise<Order> {
+  const { userId, locationId, items } = createOrderDto;
+  let total = 0;
 
-    // --- 4. Verificación y descuento de Stock (Paso Crítico) ---
-    try {
-      // Usamos Promise.all para ejecutar todas las llamadas de descuento en paralelo
-      await Promise.all(
-        items.map(itemDto => {
-          const stockAdjustment: AdjustStockDto = {
-            productId: itemDto.productId,
-            locationId: locationId, // Descontamos de la ubicación de la venta
-            amount: itemDto.quantity,
-          };
-          
-          // Llama al endpoint /decrement del inventory-service
-          const request = this.httpService.post(
-            `${this.inventoryServiceUrl}/decrement`,
-            stockAdjustment,
-          );
-          return firstValueFrom(request); // Convierte el Observable en una Promesa
-        }),
-      );
-    } catch (error) {
-      // Si falla (ej. "Stock insuficiente" o el servicio está caído)
-      console.error('Fallo al descontar stock:', error.response?.data || error.message);
-      // Lanza un error claro al cliente
-      throw new BadRequestException(`Error al procesar el inventario: ${error.response?.data?.message || 'Servicio no disponible'}`);
-    }
-    // --- Fin de la verificación de stock ---
+  // --- 4. Verificación y descuento de Stock ---
+  try {
+    await Promise.all(
+      items.map(itemDto => {
+        const stockAdjustment: AdjustStockDto = {
+          productId: itemDto.productId,
+          locationId: locationId,
+          amount: itemDto.quantity,
+        };
 
-    // 5. Si el stock se descontó correctamente, procede a crear la orden
-    const orderItems = items.map(itemDto => {
-      total += itemDto.priceAtPurchase * itemDto.quantity;
-      const item = new OrderItem();
-      item.productId = itemDto.productId;
-      item.quantity = itemDto.quantity;
-      item.priceAtPurchase = itemDto.priceAtPurchase;
-      return item;
-    });
-
-    const order = this.orderRepository.create({
-      userId,
-      locationId,
-      total: total,
-      status: OrderStatus.PAID, // Marcamos como PAGADO ya que el stock fue descontado
-      items: orderItems,
-    });
-
-    try {
-      return await this.orderRepository.save(order);
-    } catch (error) {
-      // TODO: Aquí deberíamos tener lógica para revertir la llamada de stock si
-      // falla el guardado de la orden (Saga Pattern).
-      console.error(error);
-      throw new InternalServerErrorException('Error al crear la orden después de descontar stock.');
-    }
+        const request = this.httpService.post(
+          `${this.inventoryServiceUrl}/decrement`,
+          stockAdjustment,
+        );
+        return firstValueFrom(request);
+      }),
+    );
+  } catch (error) {
+    console.error('Fallo al descontar stock:', error.response?.data || error.message);
+    throw new BadRequestException(`Error al procesar el inventario: ${error.response?.data?.message || 'Servicio no disponible'}`);
   }
+  // --- Fin de la verificación de stock ---
+
+  // 2. Crear las instancias de OrderItems Y SUS PERSONALIZACIONES
+  const orderItems = items.map(itemDto => {
+    total += itemDto.priceAtPurchase * itemDto.quantity;
+
+    // --- Lógica de Personalización ---
+    let customizations: OrderItemCustomization[] = [];
+    if (itemDto.customizations && itemDto.customizations.length > 0) {
+      customizations = itemDto.customizations.map(customDto => {
+        const custom = new OrderItemCustomization();
+        custom.attributeId = customDto.attributeId;
+        custom.valueId = customDto.valueId;
+        custom.attributeName = customDto.attributeName || null; // Usamos || null
+        custom.valueName = customDto.valueName || null; // Usamos || null
+        return custom;
+      });
+    }
+    // --- Fin Lógica de Personalización ---
+
+    // Crear la entidad OrderItem
+    const item = new OrderItem();
+    item.productId = itemDto.productId;
+    item.quantity = itemDto.quantity;
+    item.priceAtPurchase = itemDto.priceAtPurchase;
+    item.customizations = customizations; // Asignar el array de personalizaciones
+
+    return item;
+  });
+
+  // --- EL BLOQUE DUPLICADO FUE ELIMINADO ---
+
+  // 3. Crear la entidad Order
+  const order = this.orderRepository.create({
+    userId,
+    locationId,
+    total: total,
+    status: OrderStatus.PAID,
+    items: orderItems,
+  });
+
+  try {
+    // 4. Guardar todo
+    return await this.orderRepository.save(order);
+  } catch (error) {
+    console.error(error);
+    throw new InternalServerErrorException('Error al crear la orden después de descontar stock.');
+  }
+}
 
   // ... (findAll, findOne, update, remove) ...
   findAll() {
