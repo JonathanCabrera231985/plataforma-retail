@@ -1,0 +1,76 @@
+name: Build, Push, and Deploy
+
+# 1. Disparador (Trigger)
+# Esto se ejecuta cada vez que haces 'push' a la rama 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push-images:
+    # 2. Entorno de Ejecución
+    # Usamos la última versión de Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      # 3. Paso 1: Obtener el código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 4. Paso 2: Configurar Docker Buildx (para construir imágenes)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 5. Paso 3: Iniciar sesión en Docker Hub
+      # (Necesitarás configurar secretos en GitHub para esto)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 6. Paso 4: Construir y Subir cada microservicio
+      # Repetimos este bloque para cada uno de los 6 servicios
+
+      - name: Build and push iam-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/iam-service # Ruta al Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-iam-service:latest
+
+      - name: Build and push inventory-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/inventory-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-inventory-service:latest
+
+      - name: Build and push orders-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/orders-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-orders-service:latest
+
+      - name: Build and push suppliers-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/suppliers-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-suppliers-service:latest
+
+      - name: Build and push store-operations-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/store-operations-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-store-ops-service:latest
+
+      - name: Build and push reports-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/reports-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-reports-service:latest
