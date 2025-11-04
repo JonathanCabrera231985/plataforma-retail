@@ -1,0 +1,53 @@
+# --- 1. Despliegue (Deployment) para iam-service ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iam-service-deployment
+spec:
+  replicas: 2 # Inicia con 2 copias para alta disponibilidad
+  selector:
+    matchLabels:
+      app: iam-service
+  template:
+    metadata:
+      labels:
+        app: iam-service
+    spec:
+      containers:
+        - name: iam-service
+          image: tunombredeusuario/plataforma-iam-service:latest # <-- La imagen que subiste a Docker Hub
+          ports:
+            - containerPort: 3000
+          env: # Aquí se cargan las variables de entorno (DB_HOST, JWT_SECRET, etc.)
+            - name: DB_HOST
+              value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret # Las contraseñas se guardan en Secretos de K8s
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: secret
+
+---
+# --- 2. Servicio (Service) para iam-service ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iam-service # Este es el nombre DNS (ej. http://iam-service)
+spec:
+  type: LoadBalancer # Expone el servicio al exterior (para Postman/Clientes)
+  selector:
+    app: iam-service
+  ports:
+    - protocol: TCP
+      port: 80       # Puerto público
+      targetPort: 3000 # Puerto del contenedor
