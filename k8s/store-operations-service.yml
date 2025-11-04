@@ -1,0 +1,53 @@
+# --- 1. Despliegue (Deployment) para store-operations-service ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-operations-service-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: store-operations-service
+  template:
+    metadata:
+      labels:
+        app: store-operations-service
+    spec:
+      containers:
+        - name: store-operations-service
+          image: tunombredeusuario/plataforma-store-operations-service:latest # <-- Imagen para el servicio de operaciones
+          ports:
+            - containerPort: 3004 # <-- Puerto del contenedor de operaciones
+          env: # Asumo que usa las mismas variables de entorno y secretos
+            - name: DB_HOST
+              value: "nombre-de-tu-bd-en-la-nube.com"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: secret
+
+---
+# --- 2. Servicio (Service) para store-operations-service ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-operations-service # Este es el nombre DNS (ej. http://store-operations-service)
+spec:
+  type: LoadBalancer 
+  selector:
+    app: store-operations-service
+  ports:
+    - protocol: TCP
+      port: 80       # Puerto público
+      targetPort: 3004 # <-- Puerto del contenedor de operaciones
