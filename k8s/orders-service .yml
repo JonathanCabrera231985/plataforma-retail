@@ -15,12 +15,15 @@ spec:
     spec:
       containers:
         - name: orders-service
-          image: tunombredeusuario/plataforma-orders-service:latest # <-- Imagen para el servicio de órdenes
+          #image: tunombredeusuario/plataforma-orders-service:latest # <-- Imagen para el servicio de órdenes
+          image: plataforma-orders-service:latest # <-- Nombre local
+          imagePullPolicy: Never               # <-- Añadir esta línea
           ports:
             - containerPort: 3002 # <-- Puerto del contenedor de órdenes
           env: # Asumo que usa las mismas variables de entorno y secretos
             - name: DB_HOST
-              value: "nombre-de-tu-bd-en-la-nube.com"
+              #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+              value: "host.docker.internal"
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:

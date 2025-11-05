@@ -15,12 +15,15 @@ spec:
     spec:
       containers:
         - name: iam-service
-          image: tunombredeusuario/plataforma-iam-service:latest # <-- La imagen que subiste a Docker Hub
+          #image: tunombredeusuario/plataforma-iam-service:latest # <-- La imagen que subiste a Docker Hub
+          image: plataforma-iam-service:latest # <-- Nombre local
+          imagePullPolicy: Never               # <-- Añadir esta línea
           ports:
             - containerPort: 3000
           env: # Aquí se cargan las variables de entorno (DB_HOST, JWT_SECRET, etc.)
             - name: DB_HOST
-              value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+              #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+              value: "host.docker.internal"
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:

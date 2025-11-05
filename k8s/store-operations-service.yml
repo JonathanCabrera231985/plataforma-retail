@@ -15,12 +15,15 @@ spec:
     spec:
       containers:
         - name: store-operations-service
-          image: tunombredeusuario/plataforma-store-operations-service:latest # <-- Imagen para el servicio de operaciones
+          #image: tunombredeusuario/plataforma-store-operations-service:latest # <-- Imagen para el servicio de operaciones
+          image: plataforma-store-operations-service:latest # <-- Nombre local
+          imagePullPolicy: Never               # <-- Añadir esta línea
           ports:
             - containerPort: 3004 # <-- Puerto del contenedor de operaciones
           env: # Asumo que usa las mismas variables de entorno y secretos
             - name: DB_HOST
-              value: "nombre-de-tu-bd-en-la-nube.com"
+              #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+              value: "host.docker.internal"
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
