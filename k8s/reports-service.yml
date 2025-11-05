@@ -20,16 +20,40 @@ spec:
           imagePullPolicy: Never               # <-- Añadir esta línea
           ports:
             - containerPort: 3005 # <-- Puerto del contenedor de reportes
-          env: # Asumo que usa las mismas variables de entorno y secretos
-            - name: DB_HOST
-              #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
+          env:
+            # --- Conexión a la BD de Proveedores ---
+            - name: DB_HOST_SUPPLIERS
               value: "host.docker.internal"
-              # --- AÑADIR ESTAS DOS LÍNEAS ---
-            - name: DB_PORT
-              value: "5432" # El puerto de Postgres
-            - name: DB_DATABASE
-              value: "plataforma_retail_reports" # La base de datos correcta para Reports
-            # -----------------------------------
+            - name: DB_PORT_SUPPLIERS
+              value: "5432"
+            - name: DB_NAME_SUPPLIERS
+              value: "plataforma_retail_suppliers" #
+
+            # --- Conexión a la BD de Operaciones de Tienda ---
+            - name: DB_HOST_STORE_OPS
+              value: "host.docker.internal"
+            - name: DB_PORT_STORE_OPS
+              value: "5432"
+            - name: DB_NAME_STORE_OPS
+              value: "plataforma_retail_store_ops" #
+
+            # --- Conexión a la BD de Ventas (Órdenes) ---
+            - name: DB_HOST_SALES
+              value: "host.docker.internal"
+            - name: DB_PORT_SALES
+              value: "5432"
+            - name: DB_NAME_SALES
+              value: "plataforma_retail_orders" #
+
+            # --- Conexión a la BD de Inventario ---
+            - name: DB_HOST_INVENTORY
+              value: "host.docker.internal"
+            - name: DB_PORT_INVENTORY
+              value: "5432"
+            - name: DB_NAME_INVENTORY
+              value: "plataforma_retail_inventory" #
+
+            # --- Credenciales Únicas (compartidas) ---
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -40,12 +64,13 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: password
+            
+            # --- Secreto de JWT ---
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: jwt-secret
                   key: secret
-
 ---
 # --- 2. Servicio (Service) para reports-service ---
 apiVersion: v1
