@@ -24,6 +24,12 @@ spec:
             - name: DB_HOST
               #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
               value: "host.docker.internal"
+              # --- AÑADIR ESTAS DOS LÍNEAS ---
+            - name: DB_PORT
+              value: "5432" # El puerto de Postgres
+            - name: DB_NAME
+              value: "plataforma_retail_suppliers" # La base de datos correcta para Suppliers
+            # -----------------------------------
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
