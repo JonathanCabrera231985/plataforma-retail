@@ -27,7 +27,7 @@ spec:
               # --- AÑADIR ESTAS DOS LÍNEAS ---
             - name: DB_PORT
               value: "5432" # El puerto de Postgres
-            - name: DB_NAME
+            - name: DB_DATABASE
               value: "plataforma_retail_store_ops" # La base de datos correcta para Opetraciones
             # -----------------------------------
             - name: DB_USERNAME

@@ -26,7 +26,7 @@ spec:
               value: "host.docker.internal"
             - name: DB_PORT
               value: "5432"
-            - name: DB_NAME
+            - name: DB_DATABASE
               value: "plataforma_retail_orders"
             - name: DB_USERNAME
               valueFrom:
