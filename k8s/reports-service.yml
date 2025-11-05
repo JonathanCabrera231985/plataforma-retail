@@ -21,13 +21,21 @@ spec:
           ports:
             - containerPort: 3005 # <-- Puerto del contenedor de reportes
           env:
+            # --- Conexión a la BD de IAM ---
+            - name: DB_HOST_IAM
+              value: "host.docker.internal"
+            - name: DB_PORT_IAM
+              value: "5432"
+            - name: DB_NAME_IAM
+              value: "plataforma_retail_iam"
+
             # --- Conexión a la BD de Proveedores ---
             - name: DB_HOST_SUPPLIERS
               value: "host.docker.internal"
             - name: DB_PORT_SUPPLIERS
               value: "5432"
             - name: DB_NAME_SUPPLIERS
-              value: "plataforma_retail_suppliers" #
+              value: "plataforma_retail_suppliers"
 
             # --- Conexión a la BD de Operaciones de Tienda ---
             - name: DB_HOST_STORE_OPS
@@ -35,7 +43,7 @@ spec:
             - name: DB_PORT_STORE_OPS
               value: "5432"
             - name: DB_NAME_STORE_OPS
-              value: "plataforma_retail_store_ops" #
+              value: "plataforma_retail_store_ops"
 
             # --- Conexión a la BD de Ventas (Órdenes) ---
             - name: DB_HOST_SALES
@@ -43,7 +51,7 @@ spec:
             - name: DB_PORT_SALES
               value: "5432"
             - name: DB_NAME_SALES
-              value: "plataforma_retail_orders" #
+              value: "plataforma_retail_orders"
 
             # --- Conexión a la BD de Inventario ---
             - name: DB_HOST_INVENTORY
@@ -51,7 +59,7 @@ spec:
             - name: DB_PORT_INVENTORY
               value: "5432"
             - name: DB_NAME_INVENTORY
-              value: "plataforma_retail_inventory" #
+              value: "plataforma_retail_inventory"
 
             # --- Credenciales Únicas (compartidas) ---
             - name: DB_USERNAME
@@ -83,5 +91,5 @@ spec:
     app: reports-service
   ports:
     - protocol: TCP
-      port: 80       # Puerto público
+      port: 3005       # Puerto público
       targetPort: 3005 # <-- Puerto del contenedor de reportes

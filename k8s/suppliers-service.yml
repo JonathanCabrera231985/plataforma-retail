@@ -58,5 +58,5 @@ spec:
     app: suppliers-service
   ports:
     - protocol: TCP
-      port: 80       # Puerto público
+      port: 3004       # Puerto público
       targetPort: 3003 # <-- Puerto del contenedor de proveedores

@@ -56,5 +56,5 @@ spec:
     app: orders-service
   ports:
     - protocol: TCP
-      port: 80       # Puerto público
+      port: 3002       # Puerto público
       targetPort: 3002 # <-- Puerto del contenedor de órdenes

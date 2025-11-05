@@ -10,22 +10,22 @@ import { InventoryReportsModule } from './inventory-reports/inventory-reports.mo
 import { SuppliersReportsModule } from './suppliers-reports/suppliers-reports.module';
 import { StoreOpsReportsModule } from './store-ops-reports/store-ops-reports.module';
 
-// 2. Función auxiliar con tipo de retorno explícito
+// 2. Función auxiliar corregida
 const createDbConfig = (
   configService: ConfigService,
   name: string,
-  dbEnvVar: string,
+  prefix: string, // Usaremos un prefijo (ej. 'IAM', 'INVENTORY')
 ): TypeOrmModuleOptions => ({
   name: name,
   type: 'postgres',
-  host: configService.get<string>('DB_HOST'),
-  port: configService.get<number>('DB_PORT'),
+  // Construye la variable de entorno dinámicamente
+  host: configService.get<string>(`DB_HOST_${prefix}`),
+  port: configService.get<number>(`DB_PORT_${prefix}`),
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
-  database: configService.get<string>(dbEnvVar),
-  // entities: [], // <-- ELIMINA ESTA LÍNEA
-  autoLoadEntities: true, // <-- CAMBIA ESTO A TRUE
-  synchronize: false, // ¡Muy importante que sea false!
+  database: configService.get<string>(`DB_NAME_${prefix}`),
+  autoLoadEntities: true,
+  synchronize: false,
 });
 
 @Module({
@@ -41,7 +41,7 @@ const createDbConfig = (
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        createDbConfig(config, 'iam_connection', 'DB_NAME_IAM'),
+      createDbConfig(config, 'iam_connection', 'IAM'), // <-- Prefijo 'IAM'      
     }),
 
     // Conexión a la BD de Inventario
@@ -50,7 +50,7 @@ const createDbConfig = (
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        createDbConfig(config, 'inventory_connection', 'DB_NAME_INVENTORY'),
+        createDbConfig(config, 'inventory_connection', 'INVENTORY'), // <-- Prefijo 'INVENTORY'
     }),
 
     // Conexión a la BD de Órdenes
@@ -59,7 +59,7 @@ const createDbConfig = (
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        createDbConfig(config, 'orders_connection', 'DB_NAME_ORDERS'),
+        createDbConfig(config, 'orders_connection', 'SALES'), // <-- Prefijo 'SALES'
     }),
 
     // Conexión a la BD de Proveedores
@@ -68,7 +68,7 @@ const createDbConfig = (
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        createDbConfig(config, 'suppliers_connection', 'DB_NAME_SUPPLIERS'),
+        createDbConfig(config, 'suppliers_connection', 'SUPPLIERS'), // <-- Prefijo 'SUPPLIERS'
     }),
 
     // Conexión a la BD de Operaciones de Tienda
@@ -77,7 +77,7 @@ const createDbConfig = (
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        createDbConfig(config, 'store_ops_connection', 'DB_NAME_STORE_OPS'),
+        createDbConfig(config, 'store_ops_connection', 'STORE_OPS'), // <-- Prefijo 'STORE_OPS'
     }),
 
     // Módulos de reportes
