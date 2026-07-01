@@ -26,7 +26,8 @@ import { JwtStrategy } from './auth/strategies/jwt.strategy'; // 2. Importar
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule], // <--- Add this line back
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({ // Keep async removed for now
+      useFactory: (configService: ConfigService) => ({
+        // Keep async removed for now
         type: 'postgres',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),

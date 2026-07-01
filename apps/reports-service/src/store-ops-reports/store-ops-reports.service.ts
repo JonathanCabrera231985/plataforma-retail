@@ -1,64 +1,67 @@
-// apps/reports-service/src/store-ops-reports/store-ops-reports.service.ts
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { RentalPayment } from './entities/rental-payment.entity';
-import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { RentalPaymentStatus } from './enums/rental-payment-status.enum';
 
 @Injectable()
 export class StoreOpsReportsService {
-  constructor(
-    // 1. Inyectar el repositorio 'RentalPayment' usando la conexión 'store_ops_connection'
-    @InjectRepository(RentalPayment, 'store_ops_connection')
-    private readonly paymentRepository: Repository<RentalPayment>,
-  ) {}
+  private storeOpsServiceUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.storeOpsServiceUrl =
+      this.configService.get<string>('STORE_OPS_SERVICE_URL') ||
+      'http://store-operations-service:3004/rental-payments';
+  }
 
   /**
    * Reporte: Total de alquileres pendientes de aprobación por "Maria Fernanda".
    */
-  async getPendingRentalPaymentsReport() {
+  async getPendingRentalPaymentsReport(authHeader?: string) {
     try {
-      // 2. Usar el Query Builder
-      const result = await this.paymentRepository
-        .createQueryBuilder('payment') // 'payment' es el alias de la tabla
-        .select('SUM(payment.amount)', 'totalPendingAmount') // Calcula la SUMA de 'amount'
-        .addSelect('COUNT(payment.id)', 'totalPendingPayments') // Cuenta el número de pagos
-        .where('payment.status = :status', {
-          status: RentalPaymentStatus.PENDING_APPROVAL, // Filtra por PENDIENTE_APROBACION
-        })
-        .getRawOne(); // Obtiene el resultado crudo
+      const headers: HeadersInit = {};
+      if (authHeader) {
+        headers['Authorization'] = authHeader;
+      }
+
+      const response = await fetch(this.storeOpsServiceUrl, { headers });
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch rental payments from store-operations-service: ${response.statusText}`,
+        );
+      }
+
+      const payments = await response.json();
+
+      let totalPendingAmount = 0;
+      let totalPendingPayments = 0;
+
+      for (const payment of payments) {
+        if (payment.status === RentalPaymentStatus.PENDING_APPROVAL) {
+          totalPendingAmount += parseFloat(payment.amount) || 0;
+          totalPendingPayments++;
+        }
+      }
 
       return {
-        totalPendingAmount: parseFloat(result.totalPendingAmount) || 0,
-        totalPendingPayments: parseInt(result.totalPendingPayments, 10) || 0,
+        totalPendingAmount,
+        totalPendingPayments,
       };
     } catch (error) {
-      console.error('Error al generar reporte de alquileres pendientes:', error);
-      throw new InternalServerErrorException('Error al consultar el reporte de alquileres.');
+      console.error(
+        'Error al generar reporte de alquileres pendientes:',
+        error,
+      );
+      throw new InternalServerErrorException(
+        'Error al consultar el reporte de alquileres.',
+      );
     }
   }
 
-  // --- Limpiamos los métodos CRUD que no se usan ---
-
-  findAll() {
+  findAll(authHeader?: string) {
     // Hacemos que el findAll por defecto llame a nuestro reporte
-    return this.getPendingRentalPaymentsReport();
+    return this.getPendingRentalPaymentsReport(authHeader);
   }
 
   findOne(id: string) {
     return `Reporte para ${id} no implementado.`;
   }
-
-  // create(dto: any) {
-  //   return 'Este servicio no crea reportes.';
-  // }
-
-  // update(id: string, dto: any) {
-  //   return 'Este servicio no actualiza reportes.';
-  // }
-
-  // remove(id: string) {
-  //   return 'Este servicio no elimina reportes.';
-  // }
 }

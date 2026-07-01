@@ -20,13 +20,29 @@ spec:
           imagePullPolicy: Never               # <-- Añadir esta línea
           ports:
             - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
           env: # Aquí se cargan las variables de entorno (DB_HOST, JWT_SECRET, etc.)
             - name: DB_HOST
-              #value: "nombre-de-tu-bd-en-la-nube.com" # <-- Ya no es 'postgres-db'
-              value: "host.docker.internal"
-              # --- AÑADIR ESTAS DOS LÍNEAS ---
+              valueFrom:
+                configMapKeyRef:
+                  name: retail-platform-config
+                  key: DB_HOST
             - name: DB_PORT
-              value: "5432" # El puerto de Postgres
+              valueFrom:
+                configMapKeyRef:
+                  name: retail-platform-config
+                  key: DB_PORT
             - name: DB_DATABASE
               value: "plataforma_retail_iam" # La base de datos correcta para IAM
             # -----------------------------------

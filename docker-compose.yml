@@ -35,7 +35,9 @@ services:
 
   # --- Servicio de Identidad ---
   iam-service:
-    build: ./apps/iam-service
+    build:
+      context: .
+      dockerfile: apps/iam-service/Dockerfile
     env_file: ./apps/iam-service/.env
     ports:
       - "3000:3000" # Puerto del host:Puerto del contenedor
@@ -47,7 +49,9 @@ services:
 
   # --- Servicio de Inventario ---
   inventory-service:
-    build: ./apps/inventory-service
+    build:
+      context: .
+      dockerfile: apps/inventory-service/Dockerfile
     env_file: ./apps/inventory-service/.env
     ports:
       - "3001:3001"
@@ -59,7 +63,9 @@ services:
 
   # --- Servicio de Órdenes ---
   orders-service:
-    build: ./apps/orders-service
+    build:
+      context: .
+      dockerfile: apps/orders-service/Dockerfile
     env_file: ./apps/orders-service/.env
     ports:
       - "3002:3002"
@@ -73,7 +79,9 @@ services:
 
   # --- Servicio de Proveedores ---
   suppliers-service:
-    build: ./apps/suppliers-service
+    build:
+      context: .
+      dockerfile: apps/suppliers-service/Dockerfile
     env_file: ./apps/suppliers-service/.env
     ports:
       - "3003:3003"
@@ -85,7 +93,9 @@ services:
 
   # --- Servicio de Operaciones de Tienda ---
   store-operations-service:
-    build: ./apps/store-operations-service
+    build:
+      context: .
+      dockerfile: apps/store-operations-service/Dockerfile
     env_file: ./apps/store-operations-service/.env
     ports:
       - "3004:3004"
@@ -97,7 +107,9 @@ services:
 
   # --- Servicio de Reportes ---
   reports-service:
-    build: ./apps/reports-service
+    build:
+      context: .
+      dockerfile: apps/reports-service/Dockerfile
     env_file: ./apps/reports-service/.env
     ports:
       - "3005:3005"

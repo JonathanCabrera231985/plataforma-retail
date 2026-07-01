@@ -11,6 +11,7 @@ import { WorkdayStatus } from './enums/workday-status.enum';
 import { ApproveWorkdayDto } from './dto/approve-workday.dto';
 import { UnauthorizedException } from '@nestjs/common';
 import { CloseWorkdayDto } from './dto/close-workday.dto';
+import { Store } from '../stores/entities/store.entity';
 
 
 @Injectable()
@@ -29,37 +30,45 @@ export class WorkdaysService {
   async create(createWorkdayDto: CreateWorkdayDto): Promise<Workday> {
     const { storeId, openedByUserId } = createWorkdayDto;
 
-    // 1. Validar que la tienda exista
-    const store = await this.storesService.findOne(storeId);
-    // findOne ya lanza NotFoundException si no existe
+    return await this.workdayRepository.manager.transaction(async transactionalEntityManager => {
+      // 1. Buscar y adquirir bloqueo pesimista en la tienda para serializar las operaciones concurrentes de jornada de esta tienda
+      const store = await transactionalEntityManager.findOne(Store, {
+        where: { id: storeId },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // 2. Validar que no haya otra jornada abierta o pendiente para esta tienda
-    const existingJornada = await this.workdayRepository.findOne({
-      where: {
-        store: { id: storeId },
-        status: In([WorkdayStatus.OPEN, WorkdayStatus.PENDING_APPROVAL]),
-      },
+      if (!store) {
+        throw new NotFoundException(`Tienda con ID "${storeId}" no encontrada.`);
+      }
+
+      // 2. Validar que no haya otra jornada abierta o pendiente para esta tienda
+      const existingJornada = await transactionalEntityManager.findOne(Workday, {
+        where: {
+          store: { id: storeId },
+          status: In([WorkdayStatus.OPEN, WorkdayStatus.PENDING_APPROVAL]),
+        },
+      });
+
+      if (existingJornada) {
+        throw new BadRequestException(`Ya existe una jornada abierta o pendiente de aprobación para esta tienda.`);
+      }
+
+      // 3. Crear la nueva jornada
+      const workday = this.workdayRepository.create({
+        store: store,
+        openedByUserId: openedByUserId,
+        status: WorkdayStatus.PENDING_APPROVAL, // Estado inicial
+        openedAt: new Date(), // Establece la hora de apertura
+      });
+
+      try {
+        // 4. Guardar en la base de datos
+        return await transactionalEntityManager.save(Workday, workday);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al intentar abrir la jornada');
+      }
     });
-
-    if (existingJornada) {
-      throw new BadRequestException(`Ya existe una jornada abierta o pendiente de aprobación para esta tienda.`);
-    }
-
-    // 3. Crear la nueva jornada
-    const workday = this.workdayRepository.create({
-      store: store,
-      openedByUserId: openedByUserId,
-      status: WorkdayStatus.PENDING_APPROVAL, // Estado inicial
-      openedAt: new Date(), // Establece la hora de apertura
-    });
-
-    try {
-      // 4. Guardar en la base de datos
-      return await this.workdayRepository.save(workday);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al intentar abrir la jornada');
-    }
   }
 
   findAll() {
@@ -81,30 +90,39 @@ export class WorkdaysService {
   async approveWorkday(id: string, approveWorkdayDto: ApproveWorkdayDto): Promise<Workday> {
     const { approvingUserId } = approveWorkdayDto;
 
-    // 1. Buscar la jornada (findOne ya incluye la tienda por 'eager: true')
-    const workday = await this.findOne(id); // findOne ya lanza NotFoundException
+    return await this.workdayRepository.manager.transaction(async transactionalEntityManager => {
+      // 1. Buscar la jornada con bloqueo pesimista
+      const workday = await transactionalEntityManager.findOne(Workday, {
+        where: { id },
+        relations: ['store'],
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // 2. Validar el estado
-    if (workday.status !== WorkdayStatus.PENDING_APPROVAL) {
-      throw new BadRequestException(`La jornada no está pendiente de aprobación (Estado actual: ${workday.status})`);
-    }
+      if (!workday) {
+        throw new NotFoundException(`Jornada con ID "${id}" no encontrada`);
+      }
 
-    // 3. ¡Verificación de autorización!
-    // Comprueba que el ID del aprobador coincida con el ID del dueño de la tienda.
-    if (workday.store.ownerUserId !== approvingUserId) {
-      throw new UnauthorizedException('Este usuario no es el dueño de la tienda y no puede aprobar la jornada.');
-    }
+      // 2. Validar el estado
+      if (workday.status !== WorkdayStatus.PENDING_APPROVAL) {
+        throw new BadRequestException(`La jornada no está pendiente de aprobación (Estado actual: ${workday.status})`);
+      }
 
-    // 4. Actualizar el estado y guardar
-    workday.status = WorkdayStatus.OPEN;
-    workday.approvedByOwnerId = approvingUserId;
+      // 3. ¡Verificación de autorización!
+      if (workday.store.ownerUserId !== approvingUserId) {
+        throw new UnauthorizedException('Este usuario no es el dueño de la tienda y no puede aprobar la jornada.');
+      }
 
-    try {
-      return await this.workdayRepository.save(workday);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al aprobar la jornada.');
-    }
+      // 4. Actualizar el estado y guardar
+      workday.status = WorkdayStatus.OPEN;
+      workday.approvedByOwnerId = approvingUserId;
+
+      try {
+        return await transactionalEntityManager.save(Workday, workday);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al aprobar la jornada.');
+      }
+    });
   }
   /**
    * Cierra una jornada abierta.
@@ -112,25 +130,34 @@ export class WorkdaysService {
   async closeWorkday(id: string, closeWorkdayDto: CloseWorkdayDto): Promise<Workday> {
     const { closedByUserId } = closeWorkdayDto;
 
-    // 1. Buscar la jornada
-    const workday = await this.findOne(id); // findOne ya lanza NotFoundException
+    return await this.workdayRepository.manager.transaction(async transactionalEntityManager => {
+      // 1. Buscar la jornada con bloqueo pesimista
+      const workday = await transactionalEntityManager.findOne(Workday, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // 2. Validar el estado
-    if (workday.status !== WorkdayStatus.OPEN) {
-      throw new BadRequestException(`La jornada no puede cerrarse (Estado actual: ${workday.status}). Solo se pueden cerrar jornadas 'ABIERTAS'.`);
-    }
+      if (!workday) {
+        throw new NotFoundException(`Jornada con ID "${id}" no encontrada`);
+      }
 
-    // 3. Actualizar el estado y guardar
-    workday.status = WorkdayStatus.CLOSED;
-    workday.closedByUserId = closedByUserId;
-    workday.closedAt = new Date(); // Registra la hora de cierre
+      // 2. Validar el estado
+      if (workday.status !== WorkdayStatus.OPEN) {
+        throw new BadRequestException(`La jornada no puede cerrarse (Estado actual: ${workday.status}). Solo se pueden cerrar jornadas 'ABIERTAS'.`);
+      }
 
-    try {
-      return await this.workdayRepository.save(workday);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al cerrar la jornada.');
-    }
+      // 3. Actualizar el estado y guardar
+      workday.status = WorkdayStatus.CLOSED;
+      workday.closedByUserId = closedByUserId;
+      workday.closedAt = new Date(); // Registra la hora de cierre
+
+      try {
+        return await transactionalEntityManager.save(Workday, workday);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al cerrar la jornada.');
+      }
+    });
   }
 
   update(id: string, updateWorkdayDto: UpdateWorkdayDto) {

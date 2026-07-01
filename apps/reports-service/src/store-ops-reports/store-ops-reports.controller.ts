@@ -1,6 +1,4 @@
-// apps/reports-service/src/store-ops-reports/store-ops-reports.controller.ts
-
-import { Controller, Get } from '@nestjs/common'; // Solo importamos Get
+import { Controller, Get, Headers } from '@nestjs/common';
 import { StoreOpsReportsService } from './store-ops-reports.service';
 
 @Controller('store-ops-reports')
@@ -8,10 +6,7 @@ export class StoreOpsReportsController {
   constructor(private readonly storeOpsReportsService: StoreOpsReportsService) {}
 
   @Get()
-  findAll() {
-    // Llama al método 'findAll' del servicio, que devuelve el resumen de alquileres pendientes.
-    return this.storeOpsReportsService.findAll();
+  findAll(@Headers('authorization') authHeader?: string) {
+    return this.storeOpsReportsService.findAll(authHeader);
   }
-
-  // Eliminamos create, findOne, update, y remove
 }

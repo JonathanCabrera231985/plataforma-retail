@@ -31,31 +31,34 @@ export class RentalPaymentsService {
     const store = await this.storesService.findOne(storeId);
     // findOne ya lanza NotFoundException si no existe
 
-    // 2. Validar que no exista ya un pago para esa tienda en ese mes/año
-    const existingPayment = await this.rentalPaymentRepository.findOne({
-      where: { store: { id: storeId }, month, year },
+    return await this.rentalPaymentRepository.manager.transaction(async transactionalEntityManager => {
+      // 2. Validar que no exista ya un pago para esa tienda en ese mes/año con bloqueo pesimista
+      const existingPayment = await transactionalEntityManager.findOne(RentalPayment, {
+        where: { store: { id: storeId }, month, year },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (existingPayment) {
+        throw new ConflictException(`Ya existe un registro de pago para la tienda ${store.name} en ${month}/${year}`);
+      }
+
+      // 3. Crear el nuevo registro de pago
+      const rentalPayment = this.rentalPaymentRepository.create({
+        store: store,
+        amount,
+        month,
+        year,
+        status: RentalPaymentStatus.PENDING_APPROVAL, // Estado inicial
+      });
+
+      try {
+        // 4. Guardar en la base de datos dentro de la transacción
+        return await transactionalEntityManager.save(RentalPayment, rentalPayment);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al registrar el pago de alquiler');
+      }
     });
-
-    if (existingPayment) {
-      throw new ConflictException(`Ya existe un registro de pago para la tienda ${store.name} en ${month}/${year}`);
-    }
-
-    // 3. Crear el nuevo registro de pago
-    const rentalPayment = this.rentalPaymentRepository.create({
-      store: store,
-      amount,
-      month,
-      year,
-      status: RentalPaymentStatus.PENDING_APPROVAL, // Estado inicial
-    });
-
-    try {
-      // 4. Guardar en la base de datos
-      return await this.rentalPaymentRepository.save(rentalPayment);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al registrar el pago de alquiler');
-    }
   }
 
   findAll(): Promise<RentalPayment[]> {
@@ -77,24 +80,33 @@ export class RentalPaymentsService {
   async approve(id: string, approvePaymentDto: ApprovePaymentDto): Promise<RentalPayment> {
     const { approvedByMfUserId } = approvePaymentDto;
 
-    // 1. Buscar el pago
-    const payment = await this.findOne(id);
+    return await this.rentalPaymentRepository.manager.transaction(async transactionalEntityManager => {
+      // 1. Buscar el pago con bloqueo pesimista
+      const payment = await transactionalEntityManager.findOne(RentalPayment, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // 2. Validar el estado
-    if (payment.status !== RentalPaymentStatus.PENDING_APPROVAL) {
-      throw new BadRequestException(`Este pago no está pendiente de aprobación (Estado actual: ${payment.status})`);
-    }
+      if (!payment) {
+        throw new NotFoundException(`Pago de alquiler con ID "${id}" no encontrado`);
+      }
 
-    // 3. Actualizar estado y guardar
-    payment.status = RentalPaymentStatus.APPROVED;
-    payment.approvedByMfUserId = approvedByMfUserId;
+      // 2. Validar el estado
+      if (payment.status !== RentalPaymentStatus.PENDING_APPROVAL) {
+        throw new BadRequestException(`Este pago no está pendiente de aprobación (Estado actual: ${payment.status})`);
+      }
 
-    try {
-      return await this.rentalPaymentRepository.save(payment);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al aprobar el pago.');
-    }
+      // 3. Actualizar estado y guardar
+      payment.status = RentalPaymentStatus.APPROVED;
+      payment.approvedByMfUserId = approvedByMfUserId;
+
+      try {
+        return await transactionalEntityManager.save(RentalPayment, payment);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al aprobar el pago.');
+      }
+    });
   }
 
   /**
@@ -103,27 +115,36 @@ export class RentalPaymentsService {
   async markAsPaid(id: string, markAsPaidDto: MarkAsPaidDto): Promise<RentalPayment> {
     const { notes } = markAsPaidDto;
 
-    // 1. Buscar el pago
-    const payment = await this.findOne(id);
+    return await this.rentalPaymentRepository.manager.transaction(async transactionalEntityManager => {
+      // 1. Buscar el pago con bloqueo pesimista
+      const payment = await transactionalEntityManager.findOne(RentalPayment, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // 2. Validar el estado
-    if (payment.status !== RentalPaymentStatus.APPROVED) {
-      throw new BadRequestException(`Este pago no puede marcarse como pagado (Estado actual: ${payment.status})`);
-    }
+      if (!payment) {
+        throw new NotFoundException(`Pago de alquiler con ID "${id}" no encontrado`);
+      }
 
-    // 3. Actualizar estado y guardar
-    payment.status = RentalPaymentStatus.PAID;
-    payment.paymentDate = new Date(); // Registra la fecha de pago
-    if (notes) {
-      payment.notes = notes;
-    }
+      // 2. Validar el estado
+      if (payment.status !== RentalPaymentStatus.APPROVED) {
+        throw new BadRequestException(`Este pago no puede marcarse como pagado (Estado actual: ${payment.status})`);
+      }
 
-    try {
-      return await this.rentalPaymentRepository.save(payment);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Error al marcar el pago como pagado.');
-    }
+      // 3. Actualizar estado y guardar
+      payment.status = RentalPaymentStatus.PAID;
+      payment.paymentDate = new Date(); // Registra la fecha de pago
+      if (notes) {
+        payment.notes = notes;
+      }
+
+      try {
+        return await transactionalEntityManager.save(RentalPayment, payment);
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error al marcar el pago como pagado.');
+      }
+    });
   }
   // Dejamos este 'update' genérico vacío por ahora, ya que usamos métodos específicos
   update(id: string, updateRentalPaymentDto: UpdateRentalPaymentDto) {

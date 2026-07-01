@@ -1,6 +1,11 @@
 // apps/inventory-service/src/attribute-values/attribute-values.service.ts
 
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAttributeValueDto } from './dto/create-attribute-value.dto';
 import { UpdateAttributeValueDto } from './dto/update-attribute-value.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,7 +24,9 @@ export class AttributeValuesService {
     private readonly attributesService: AttributesService,
   ) {}
 
-  async create(createAttributeValueDto: CreateAttributeValueDto): Promise<AttributeValue> {
+  async create(
+    createAttributeValueDto: CreateAttributeValueDto,
+  ): Promise<AttributeValue> {
     const { value, attributeId } = createAttributeValueDto;
 
     // 4. Buscar el atributo padre
@@ -38,7 +45,9 @@ export class AttributeValuesService {
     } catch (error) {
       // TODO: Manejar error de valor duplicado para el mismo atributo
       console.error(error);
-      throw new InternalServerErrorException('Error al crear el valor del atributo');
+      throw new InternalServerErrorException(
+        'Error al crear el valor del atributo',
+      );
     }
   }
 
@@ -48,9 +57,13 @@ export class AttributeValuesService {
   }
 
   async findOne(id: string): Promise<AttributeValue> {
-    const attributeValue = await this.attributeValueRepository.findOne({ where: { id } });
+    const attributeValue = await this.attributeValueRepository.findOne({
+      where: { id },
+    });
     if (!attributeValue) {
-      throw new NotFoundException(`Valor de atributo con ID "${id}" no encontrado`);
+      throw new NotFoundException(
+        `Valor de atributo con ID "${id}" no encontrado`,
+      );
     }
     return attributeValue;
   }

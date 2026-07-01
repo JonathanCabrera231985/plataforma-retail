@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retail-platform-config
+data:
+  DB_HOST: "host.docker.internal"
+  DB_PORT: "5432"
+  ORDERS_SERVICE_URL: "http://orders-service:3002/orders"
+  INVENTORY_SERVICE_URL: "http://inventory-service:3001/inventory"
+  SUPPLIERS_SERVICE_URL: "http://suppliers-service:3003/purchase-orders"
+  STORE_OPS_SERVICE_URL: "http://store-operations-service:3004/rental-payments"

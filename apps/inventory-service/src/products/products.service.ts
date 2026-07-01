@@ -1,6 +1,10 @@
 // apps/inventory-service/src/products/products.service.ts
 
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'; // Asegúrate que NotFoundException esté importado
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'; // Asegúrate que NotFoundException esté importado
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,7 +28,9 @@ export class ProductsService {
     // 1. Busca la categoría por ID
     const category = await this.categoriesService.findOne(categoryId); // Usamos el servicio de categorías
     if (!category) {
-      throw new NotFoundException(`Categoría con ID "${categoryId}" no encontrada`);
+      throw new NotFoundException(
+        `Categoría con ID "${categoryId}" no encontrada`,
+      );
     }
 
     // 2. Crea la instancia del producto y asigna la categoría encontrada
@@ -64,7 +70,10 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<Product> {
     // 1. Carga el producto existente junto con su categoría actual
     //    Usamos 'preload' que busca el producto por ID y luego fusiona los nuevos datos.
     //    Si el producto no existe, retorna undefined.
@@ -79,9 +88,13 @@ export class ProductsService {
 
     // 2. (Opcional) Si se proporciona un categoryId en el DTO, busca y asigna la nueva categoría
     if (updateProductDto.categoryId) {
-      const category = await this.categoriesService.findOne(updateProductDto.categoryId);
+      const category = await this.categoriesService.findOne(
+        updateProductDto.categoryId,
+      );
       if (!category) {
-        throw new NotFoundException(`Categoría con ID "${updateProductDto.categoryId}" no encontrada al actualizar`);
+        throw new NotFoundException(
+          `Categoría con ID "${updateProductDto.categoryId}" no encontrada al actualizar`,
+        );
       }
       product.category = category;
     }
@@ -96,7 +109,8 @@ export class ProductsService {
     }
   }
 
-  async remove(id: string): Promise<void> { // Cambiamos el retorno a Promise<void>
+  async remove(id: string): Promise<void> {
+    // Cambiamos el retorno a Promise<void>
     // 1. Primero busca el producto para asegurarte de que existe
     const product = await this.findOne(id); // Reutiliza findOne que ya lanza NotFoundException
 
@@ -107,8 +121,10 @@ export class ProductsService {
     const deleteResult = await this.productRepository.delete(id);
 
     if (deleteResult.affected === 0) {
-        // Esto no debería ocurrir si findOne tuvo éxito, pero es una buena práctica
-        throw new NotFoundException(`Producto con ID "${id}" no encontrado al intentar eliminar`);
+      // Esto no debería ocurrir si findOne tuvo éxito, pero es una buena práctica
+      throw new NotFoundException(
+        `Producto con ID "${id}" no encontrado al intentar eliminar`,
+      );
     }
     // No retornamos nada en un DELETE exitoso (o puedes retornar { affected: deleteResult.affected })
   }

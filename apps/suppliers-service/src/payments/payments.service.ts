@@ -33,10 +33,12 @@ export class PaymentsService {
     await queryRunner.startTransaction();
 
     try {
-      // 2. Buscar la orden de compra (usando el servicio)
-      const purchaseOrder = await this.purchaseOrdersService.findOne(purchaseOrderId);
+      // 2. Buscar la orden de compra usando queryRunner con bloqueo pesimista
+      const purchaseOrder = await queryRunner.manager.findOne(PurchaseOrder, {
+        where: { id: purchaseOrderId },
+        lock: { mode: 'pessimistic_write' },
+      });
       if (!purchaseOrder) {
-        // findOne ya lanza NotFound, pero doble chequeo
         throw new NotFoundException(`Orden de compra con ID ${purchaseOrderId} no encontrada.`);
       }
 

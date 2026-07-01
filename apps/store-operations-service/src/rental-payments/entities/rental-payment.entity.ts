@@ -9,10 +9,12 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  Unique,
 } from 'typeorm';
 import { RentalPaymentStatus } from '../enums/rental-payment-status.enum';
 
 @Entity('rental_payments') // Nombre de la tabla
+@Unique(['store', 'month', 'year'])
 export class RentalPayment {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -8,7 +8,31 @@ on:
       - main
 
 jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests
+        run: npm test --workspaces --if-present
+
+      - name: Run E2E tests
+        run: npm run test:e2e --workspaces --if-present
+
   build-and-push-images:
+    name: Build and Push Images
+    needs: test
     # 2. Entorno de Ejecución
     # Usamos la última versión de Ubuntu
     runs-on: ubuntu-latest

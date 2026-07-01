@@ -1,64 +1,65 @@
-// apps/reports-service/src/sales-reports/sales-reports.service.ts
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Order } from './entities/order.entity';
-import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class SalesReportsService {
-  constructor(
-    // 1. Inyectar el repositorio 'Order' usando la conexión 'orders_connection'
-    @InjectRepository(Order, 'orders_connection')
-    private readonly orderRepository: Repository<Order>,
-  ) {}
+  private ordersServiceUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.ordersServiceUrl =
+      this.configService.get<string>('ORDERS_SERVICE_URL') ||
+      'http://orders-service:3002/orders';
+  }
 
   /**
    * Genera un resumen de ventas totales.
    */
-  async getSalesSummary() {
+  async getSalesSummary(authHeader?: string) {
     try {
-      // 2. Usar el Query Builder para crear una consulta SQL
-      const result = await this.orderRepository
-        .createQueryBuilder('order') // 'order' es el alias de la tabla
-        .select('SUM(order.total)', 'totalSales') // Calcula la SUMA de la columna 'total'
-        .addSelect('COUNT(order.id)', 'totalOrders') // Cuenta el número de órdenes
-        .where('order.status = :status', { status: OrderStatus.PAID }) // Filtra solo por órdenes PAGADAS
-        .getRawOne(); // Obtiene el resultado crudo (ej. { totalSales: '1500.75', totalOrders: '10' })
+      const headers: HeadersInit = {};
+      if (authHeader) {
+        headers['Authorization'] = authHeader;
+      }
 
-      // Convertir a números
+      const response = await fetch(this.ordersServiceUrl, { headers });
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch orders from orders-service: ${response.statusText}`,
+        );
+      }
+
+      const orders = await response.json();
+
+      // Convertir y calcular sumas
+      let totalSales = 0;
+      let totalOrders = 0;
+
+      for (const order of orders) {
+        if (order.status === OrderStatus.PAID) {
+          totalSales += parseFloat(order.total) || 0;
+          totalOrders++;
+        }
+      }
+
       return {
-        totalSales: parseFloat(result.totalSales) || 0,
-        totalOrders: parseInt(result.totalOrders, 10) || 0,
+        totalSales,
+        totalOrders,
       };
     } catch (error) {
       console.error('Error al generar reporte de ventas:', error);
-      throw new InternalServerErrorException('Error al consultar el reporte de ventas.');
+      throw new InternalServerErrorException(
+        'Error al consultar el reporte de ventas.',
+      );
     }
   }
 
-  // --- Limpiamos los métodos CRUD que no se usan ---
-  // Este servicio no debe crear, actualizar o eliminar datos de ventas.
-
-  findAll() {
+  findAll(authHeader?: string) {
     // Redirigimos el 'findAll' genérico a nuestro método de resumen
-    return this.getSalesSummary();
+    return this.getSalesSummary(authHeader);
   }
 
   findOne(id: string) {
     return `Reporte para ${id} no implementado.`;
   }
-
-  // create(createSalesReportDto: any) {
-  //   return 'Este servicio no crea reportes, solo los consulta.';
-  // }
-
-  // update(id: string, updateSalesReportDto: any) {
-  //   return 'Este servicio no actualiza reportes.';
-  // }
-
-  // remove(id: string) {
-  //   return 'Este servicio no elimina reportes.';
-  // }
 }

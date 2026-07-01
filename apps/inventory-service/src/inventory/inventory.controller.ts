@@ -1,6 +1,16 @@
 // apps/inventory-service/src/inventory/inventory.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common'; // Añadir HttpCode, HttpStatus
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common'; // Añadir HttpCode, HttpStatus
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
@@ -47,7 +57,10 @@ export class InventoryController {
 
   // Este PATCH ahora actualiza la cantidad directamente a un valor específico
   @Patch(':id')
-  adjustStockQuantity(@Param('id') id: string, @Body() updateInventoryDto: UpdateInventoryDto) {
+  adjustStockQuantity(
+    @Param('id') id: string,
+    @Body() updateInventoryDto: UpdateInventoryDto,
+  ) {
     // Renombramos 'update' para claridad, llamando al método del servicio
     return this.inventoryService.adjustStock(id, updateInventoryDto);
   }
