@@ -8,7 +8,18 @@ describe('AttributeValuesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AttributeValuesController],
-      providers: [AttributeValuesService],
+      providers: [
+        {
+          provide: AttributeValuesService,
+          useValue: {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<AttributeValuesController>(
