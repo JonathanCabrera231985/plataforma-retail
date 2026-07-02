@@ -67,41 +67,47 @@ jobs:
       - name: Build and push iam-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/iam-service # Ruta al Dockerfile
+          context: .
+          file: ./apps/iam-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-iam-service:latest
 
       - name: Build and push inventory-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/inventory-service
+          context: .
+          file: ./apps/inventory-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-inventory-service:latest
 
       - name: Build and push orders-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/orders-service
+          context: .
+          file: ./apps/orders-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-orders-service:latest
 
       - name: Build and push suppliers-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/suppliers-service
+          context: .
+          file: ./apps/suppliers-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-suppliers-service:latest
 
       - name: Build and push store-operations-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/store-operations-service
+          context: .
+          file: ./apps/store-operations-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-store-ops-service:latest
 
       - name: Build and push reports-service
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/reports-service
+          context: .
+          file: ./apps/reports-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/plataforma-reports-service:latest
